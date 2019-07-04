@@ -162,9 +162,6 @@ public class FreezeTimersOverlay extends Overlay
 
 		String text = processTickCounter(finishedAt);
 		Point poi = actor.getCanvasTextLocation(g, text, 0);
-		if (poi == null){
-			return false;
-		}
 		int xpoi = poi.getX() + 20;
 		int ypoi = poi.getY();
 		Point FixedPoint = new Point(xpoi, ypoi);
