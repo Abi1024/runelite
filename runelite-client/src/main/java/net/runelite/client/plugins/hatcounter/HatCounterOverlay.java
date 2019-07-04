@@ -52,6 +52,8 @@ public class HatCounterOverlay extends Overlay
         }
         panelComponent.getChildren().clear();
 
+        //System.out.println(hats.toString());
+
         for (Map.Entry<Integer, Integer> hat : hats.entrySet())
         {
 
@@ -63,6 +65,7 @@ public class HatCounterOverlay extends Overlay
             final int hatID = hat.getKey();
             String item_name = manager.getItemComposition(hatID).getName().toLowerCase();
             if (Arrays.asList(config.getIgnoredHeadgear().toLowerCase().split(",")).contains(item_name)){
+                //System.out.println("ITEM NAME: " + item_name);
                 continue;
             }
             panelComponent.getChildren().add(new ImageComponent(manager.getImage(hatID, hat.getValue(), true)));
