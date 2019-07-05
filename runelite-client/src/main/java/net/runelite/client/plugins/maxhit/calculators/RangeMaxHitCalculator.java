@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2019, Bartvollebregt <https://github.com/Bartvollebregt>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,49 +22,38 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.client.plugins.maxhit.calculators;
 
-/**
- * An enumeration of equipment slots in the inventory {@link ItemContainer}.
- * <p>
- * These values are intended for use with the local players equipment
- * {@link ItemContainer} corresponding. For obtaining information about equipment
- * in the {@link PlayerComposition}, use {@link net.runelite.api.kit.KitType}.
- *
- * @see Client#getItemContainer(InventoryID)
- * @see InventoryID#EQUIPMENT
- */
-public enum EquipmentInventorySlot
+import net.runelite.api.Client;
+import net.runelite.api.Item;
+import net.runelite.api.Skill;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
+
+public class RangeMaxHitCalculator extends MeleeMaxHitCalculator
 {
-	HEAD(0),
-	CAPE(1),
-	AMULET(2),
-	WEAPON(3),
-	BODY(4),
-	SHIELD(5),
-	LEGS(7),
-	HAIR(8),
-	GLOVES(9),
-	BOOTS(10),
-	RING(12),
-	AMMO(13);
 
-	private final int slotIdx;
-
-	EquipmentInventorySlot(int slotIdx)
+	public RangeMaxHitCalculator(Client client, Item[] equipedItems)
 	{
-		this.slotIdx = slotIdx;
+		super(client, CombatMethod.RANGE, equipedItems);
 	}
 
-	/**
-	 * Gets the index into the item array obtained from
-	 * {@link ItemContainer#getItems()}.
-	 *
-	 * @return the raw index
-	 */
-	public int getSlotIdx()
+	@Override
+	protected String getSkillStrengthText(String equipmentText)
 	{
-		return slotIdx;
+		return equipmentText.replace("Ranged strength: ", "").replace(".", "").replace("%", "");
+	}
+
+	@Override
+	public Widget equipmentSkillPower()
+	{
+		return this.client.getWidget(WidgetInfo.EQUIPMENT_RANGED_STRENGTH);
+	}
+
+	@Override
+	public double getCurrentSkillPower()
+	{
+		return this.client.getBoostedSkillLevel(Skill.RANGED);
 	}
 
 }

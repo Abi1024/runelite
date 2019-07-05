@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2019, Bartvollebregt <https://github.com/Bartvollebregt>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,49 +22,34 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.client.plugins.maxhit.requirements;
 
-/**
- * An enumeration of equipment slots in the inventory {@link ItemContainer}.
- * <p>
- * These values are intended for use with the local players equipment
- * {@link ItemContainer} corresponding. For obtaining information about equipment
- * in the {@link PlayerComposition}, use {@link net.runelite.api.kit.KitType}.
- *
- * @see Client#getItemContainer(InventoryID)
- * @see InventoryID#EQUIPMENT
- */
-public enum EquipmentInventorySlot
+import net.runelite.api.Client;
+import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
+import net.runelite.client.plugins.maxhit.equipment.EquipmentHelper;
+import net.runelite.client.plugins.maxhit.equipment.EquipmentItemset;
+
+public class EquipmentItemSetRequirement implements Requirement
 {
-	HEAD(0),
-	CAPE(1),
-	AMULET(2),
-	WEAPON(3),
-	BODY(4),
-	SHIELD(5),
-	LEGS(7),
-	HAIR(8),
-	GLOVES(9),
-	BOOTS(10),
-	RING(12),
-	AMMO(13);
+	private final EquipmentItemset itemSet;
 
-	private final int slotIdx;
-
-	EquipmentInventorySlot(int slotIdx)
+	public EquipmentItemSetRequirement(EquipmentItemset itemSet)
 	{
-		this.slotIdx = slotIdx;
+		this.itemSet = itemSet;
 	}
 
-	/**
-	 * Gets the index into the item array obtained from
-	 * {@link ItemContainer#getItems()}.
-	 *
-	 * @return the raw index
-	 */
-	public int getSlotIdx()
+	@Override
+	public boolean meetsRequirements(Client client)
 	{
-		return slotIdx;
-	}
+		ItemContainer equipmentContainer = client.getItemContainer(InventoryID.EQUIPMENT);
+		if (equipmentContainer == null)
+		{
+			return false;
+		}
+		Item[] equipedItems = equipmentContainer.getItems();
 
+		return EquipmentHelper.wearsItemSet(equipedItems, this.itemSet);
+	}
 }
