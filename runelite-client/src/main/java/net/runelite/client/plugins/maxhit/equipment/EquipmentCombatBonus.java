@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Adam <Adam@sigterm.info>
+ * Copyright (c) 2019, Bartvollebregt <https://github.com/Bartvollebregt>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,49 +22,36 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.client.plugins.maxhit.equipment;
 
-/**
- * An enumeration of equipment slots in the inventory {@link ItemContainer}.
- * <p>
- * These values are intended for use with the local players equipment
- * {@link ItemContainer} corresponding. For obtaining information about equipment
- * in the {@link PlayerComposition}, use {@link net.runelite.api.kit.KitType}.
- *
- * @see Client#getItemContainer(InventoryID)
- * @see InventoryID#EQUIPMENT
- */
-public enum EquipmentInventorySlot
+import net.runelite.client.plugins.maxhit.calculators.MaxHitCalculator;
+
+public class EquipmentCombatBonus
 {
-	HEAD(0),
-	CAPE(1),
-	AMULET(2),
-	WEAPON(3),
-	BODY(4),
-	SHIELD(5),
-	LEGS(7),
-	HAIR(8),
-	GLOVES(9),
-	BOOTS(10),
-	RING(12),
-	AMMO(13);
 
-	private final int slotIdx;
+	private final double meleeBonus;
+	private final double rangeBonus;
+	private final double magicBonus;
 
-	EquipmentInventorySlot(int slotIdx)
+	public EquipmentCombatBonus(double meleeBonus, double rangeBonus, double magicBonus)
 	{
-		this.slotIdx = slotIdx;
+		this.meleeBonus = meleeBonus;
+		this.rangeBonus = rangeBonus;
+		this.magicBonus = magicBonus;
 	}
 
-	/**
-	 * Gets the index into the item array obtained from
-	 * {@link ItemContainer#getItems()}.
-	 *
-	 * @return the raw index
-	 */
-	public int getSlotIdx()
+	public double getCombatBonus(MaxHitCalculator.CombatMethod combatMethod)
 	{
-		return slotIdx;
+		switch (combatMethod)
+		{
+			default:
+			case MELEE:
+				return this.meleeBonus;
+			case RANGE:
+				return this.rangeBonus;
+			case MAGIC:
+				return this.magicBonus;
+		}
 	}
 
 }
