@@ -34,7 +34,6 @@ import net.runelite.client.ui.ColorScheme;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class InventorySetupInventoryPanel extends InventorySetupContainerPanel
 {
@@ -80,12 +79,16 @@ public class InventorySetupInventoryPanel extends InventorySetupContainerPanel
 
 	}
 
-	void highlightDifferentSlots(HashMap<Integer,Integer> current, final InventorySetup inventorySetup)
+	void highlightDifferentSlots(final ArrayList<InventorySetupItem> currInventory, final InventorySetup inventorySetup)
 	{
+
 		final ArrayList<InventorySetupItem> inventoryToCheck = inventorySetup.getInventory();
+
+		assert currInventory.size() == inventoryToCheck.size() : "size mismatch";
+
 		for (int i = 0; i < NUM_INVENTORY_ITEMS; i++)
 		{
-			super.highlightDifferentSlotColor(inventoryToCheck.get(i), current, inventorySlots.get(i));
+			super.highlightDifferentSlotColor(inventoryToCheck.get(i), currInventory.get(i), inventorySlots.get(i));
 		}
 	}
 

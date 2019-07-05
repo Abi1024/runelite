@@ -28,16 +28,14 @@ package net.runelite.client.plugins.inventorysetups;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
-import java.awt.Color;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.events.ConfigChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.ItemVariationMapping;
 import net.runelite.client.plugins.Plugin;
@@ -95,24 +93,6 @@ public class InventorySetupPlugin extends Plugin
 
 	@Inject
 	private ConfigManager configManager;
-
-	@Getter
-	private boolean HighLightDifferences;
-
-	@Getter
-	private Color HighLightColor;
-
-	@Getter
-	private boolean StackDifference;
-
-	@Getter
-	private boolean VariationDifference;
-
-	@Getter
-	private boolean BankHighlight;
-
-	@Getter
-	private Color BankHighlightColor;
 
 	private InventorySetupPluginPanel panel;
 
@@ -321,23 +301,22 @@ public class InventorySetupPlugin extends Plugin
 			return;
 		}
 
-        ArrayList<InventorySetupItem> normInv = getNormalizedContainer(InventoryID.INVENTORY);
-        ArrayList<InventorySetupItem> normEqp = getNormalizedContainer(InventoryID.EQUIPMENT);
-        final InventorySetup inventorySetup = inventorySetups.get(selectedInventorySetup);
-        panel.highlightDifferences(normInv, normEqp, inventorySetup);
+		// check to see that the container is the equipment or inventory
+		ItemContainer container = event.getItemContainer();
 
-	}
-
-	public void add_to_container(ArrayList<InventorySetupItem> equipment_container, HashMap<Integer, Integer> container) {
-		for (InventorySetupItem item : equipment_container){
-			int itemID = !getConfig().getVariationDifference() ? ItemVariationMapping.map(item.getId()) : item.getId();
-			if (!container.containsKey(itemID)){
-				container.put(itemID,item.getQuantity());
-			}else{
-				int current_val = container.get(itemID);
-				container.put(itemID,current_val + item.getQuantity());
-			}
+		if (container == client.getItemContainer(InventoryID.INVENTORY))
+		{
+			ArrayList<InventorySetupItem> normContainer = getNormalizedContainer(InventoryID.INVENTORY);
+			final InventorySetup setup = inventorySetups.get(selectedInventorySetup);
+			panel.highlightDifferences(normContainer, setup, InventoryID.INVENTORY);
 		}
+		else if (container == client.getItemContainer(InventoryID.EQUIPMENT))
+		{
+			ArrayList<InventorySetupItem> normContainer = getNormalizedContainer(InventoryID.EQUIPMENT);
+			final InventorySetup setup = inventorySetups.get(selectedInventorySetup);
+			panel.highlightDifferences(normContainer, setup, InventoryID.EQUIPMENT);
+		}
+
 	}
 
 	@Subscribe
@@ -370,6 +349,7 @@ public class InventorySetupPlugin extends Plugin
 		assert id == InventoryID.INVENTORY || id == InventoryID.EQUIPMENT : "invalid inventory ID";
 
 		final ItemContainer container = client.getItemContainer(id);
+
 		ArrayList<InventorySetupItem> newContainer = new ArrayList<>();
 
 		Item[] items = null;
@@ -404,9 +384,6 @@ public class InventorySetupPlugin extends Plugin
 	public final InventorySetupConfig getConfig()
 	{
 		return config;
-
-
-
 	}
 
 	public boolean getHighlightDifference()
