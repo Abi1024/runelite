@@ -35,24 +35,21 @@ public class EquipmentHelper
 		return itemSet.getItems().stream().allMatch(item -> wearsItem(equipedItems, item));
 	}
 
-    private static boolean wearsItem(Item[] equipedItems, EquipmentInventorySlot slot, int itemId)
-    {
-        if (slot.getSlotIdx() >= equipedItems.length){
-            return false;
-        }
-        Item item = equipedItems[slot.getSlotIdx()];
-        if (item == null)
-        {
-            return false;
-        }
-        return item.getId() == itemId;
-    }
+	private static boolean wearsItem(Item[] equipedItems, EquipmentInventorySlot slot, int itemId)
+	{
+		Item item = equipedItems[slot.getSlotIdx()];
+		if (item == null)
+		{
+			return false;
+		}
+		return item.getId() == itemId;
+	}
 
-    public static boolean wearsItem(Item[] equipedItems, EquipmentSlotItem equipmentSlotItem)
-    {
-        return equipmentSlotItem.getItems().stream().anyMatch(itemId ->
-                wearsItem(equipedItems, equipmentSlotItem.getEquipmentSlot(), itemId)
-        );
-    }
+	public static boolean wearsItem(Item[] equipedItems, EquipmentSlotItem equipmentSlotItem)
+	{
+		return equipmentSlotItem.getItems().stream().anyMatch(itemId ->
+			wearsItem(equipedItems, equipmentSlotItem.getEquipmentSlot(), itemId)
+		);
+	}
 
 }
