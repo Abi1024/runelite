@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2019, Bartvollebregt <https://github.com/Bartvollebregt>
+ * Copyright (c) 2018-2019, Ethan <https://github.com/Wea1thRS/>
+ * Copyright (c) 2018, https://runelitepl.us
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,39 +23,41 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.maxhit.equipment;
+package net.runelite.client.plugins.inventorysetups.ui;
 
-import net.runelite.api.EquipmentInventorySlot;
-import net.runelite.api.Item;
+import net.runelite.client.game.AsyncBufferedImage;
 
-public class EquipmentHelper
+import javax.swing.*;
+import java.awt.*;
+
+public class InventorySetupSlot extends JPanel
 {
+	private final JLabel imageLabel;
 
-	public static boolean wearsItemSet(Item[] equipedItems, EquipmentItemset itemSet)
+	public InventorySetupSlot(Color color)
 	{
-		return itemSet.getItems().stream().allMatch(item -> wearsItem(equipedItems, item));
+		imageLabel = new JLabel();
+		imageLabel.setVerticalAlignment(SwingConstants.CENTER);
+		setPreferredSize(new Dimension(46, 42));
+		setBackground(color);
+		add(imageLabel);
+
 	}
 
-	private static boolean wearsItem(Item[] equipedItems, int itemId)
+	public void setImageLabel(String toolTip, AsyncBufferedImage itemImage)
 	{
-		//System.out.println("2nd equipment slot item");
-		for (int i = 0; i < equipedItems.length; i++){
-			if (equipedItems[i].equals(itemId)){
-				return true;
-			}
+		if (itemImage == null || toolTip == null)
+		{
+			imageLabel.setToolTipText("");
+			imageLabel.setIcon(null);
+			imageLabel.revalidate();
+			return;
 		}
-		return false;
-	}
 
-	public static boolean wearsItem(Item[] equipedItems, EquipmentSlotItem equipmentSlotItem)
-	{
-		//System.out.println("3rd wears item: ");
-        /*for (Integer i : equipmentSlotItem.getItems()){
-            System.out.println("Item ID: " + i);
-        }*/
-		return equipmentSlotItem.getItems().stream().anyMatch(itemId ->
-				wearsItem(equipedItems,itemId)
-		);
-	}
+		imageLabel.setToolTipText(toolTip);
+		itemImage.addTo(imageLabel);
 
+		validate();
+		repaint();
+	}
 }
