@@ -27,6 +27,7 @@ package net.runelite.client.plugins.inventorysetups.ui;
 
 import net.runelite.api.InventoryID;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.ItemVariationMapping;
 import net.runelite.client.plugins.inventorysetups.InventorySetup;
 import net.runelite.client.plugins.inventorysetups.InventorySetupItem;
 import net.runelite.client.plugins.inventorysetups.InventorySetupPlugin;
@@ -42,6 +43,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class InventorySetupPluginPanel extends PluginPanel
 {
@@ -247,8 +249,7 @@ public class InventorySetupPluginPanel extends PluginPanel
 			final ArrayList<InventorySetupItem> normInv = plugin.getNormalizedContainer(InventoryID.INVENTORY);
 			final ArrayList<InventorySetupItem> normEqp = plugin.getNormalizedContainer(InventoryID.EQUIPMENT);
 
-			highlightDifferences(normInv, inventorySetup, InventoryID.INVENTORY);
-			highlightDifferences(normEqp, inventorySetup, InventoryID.EQUIPMENT);
+			highlightDifferences(normInv, normEqp, inventorySetup);
 		}
 		else
 		{
@@ -277,21 +278,17 @@ public class InventorySetupPluginPanel extends PluginPanel
 		repaint();
 	}
 
-	public void highlightDifferences(final ArrayList<InventorySetupItem> container,
-									final InventorySetup setupToCheck,
-									final InventoryID type)
+	public void highlightDifferences(final ArrayList<InventorySetupItem> inventory_container,
+									 final ArrayList<InventorySetupItem> equipment_container,
+									final InventorySetup setupToCheck)
 	{
-		switch (type)
-		{
-			case INVENTORY:
-				invPanel.highlightDifferentSlots(container, setupToCheck);
-				break;
-
-			case EQUIPMENT:
-				eqpPanel.highlightDifferences(container, setupToCheck);
-				break;
-		}
+		HashMap<Integer,Integer> container = new HashMap<>();
+		plugin.add_to_container(inventory_container, container);
+		plugin.add_to_container(equipment_container, container);
+		invPanel.highlightDifferentSlots(container, setupToCheck);
+		eqpPanel.highlightDifferentSlots(container, setupToCheck);
 	}
+
 
 	public final String getSelectedInventorySetup()
 	{

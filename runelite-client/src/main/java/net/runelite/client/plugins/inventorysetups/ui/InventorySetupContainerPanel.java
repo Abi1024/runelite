@@ -36,6 +36,7 @@ import net.runelite.client.ui.ColorScheme;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public abstract class InventorySetupContainerPanel extends JPanel
 {
@@ -92,7 +93,7 @@ public abstract class InventorySetupContainerPanel extends JPanel
 	}
 
 	void highlightDifferentSlotColor(InventorySetupItem savedItem,
-									InventorySetupItem currItem,
+									HashMap<Integer,Integer> current,
 									final InventorySetupSlot containerSlot)
 	{
 		// important note: do not use item names for comparisons
@@ -101,28 +102,31 @@ public abstract class InventorySetupContainerPanel extends JPanel
 		final InventorySetupConfig config = plugin.getConfig();
 		final Color highlightColor = config.getHighlightColor();
 
-		if (config.getStackDifference() && currItem.getQuantity() != savedItem.getQuantity())
-		{
+        int savedID = !config.getVariationDifference() ? ItemVariationMapping.map(savedItem.getId()) : savedItem.getId();
+
+        if (config.getStackDifference() && savedItem.getQuantity() > 1){
+            if (!current.containsKey(savedID)){
+                containerSlot.setBackground(highlightColor);
+                return;
+            }else if (current.get(savedItem.getId()) != savedItem.getQuantity()){
+                containerSlot.setBackground(highlightColor);
+                return;
+            }
+        }
+
+		if (current.containsKey(savedID)){
+			if (current.get(savedID) < savedItem.getQuantity()){
+				current.put(savedID,0);
+				containerSlot.setBackground(highlightColor);
+				return;
+			}else{
+				int current_val = current.get(savedID);
+				current.put(savedID,current_val - savedItem.getQuantity());
+			}
+		}else{
 			containerSlot.setBackground(highlightColor);
 			return;
 		}
-
-		int currId = currItem.getId();
-		int checkId = savedItem.getId();
-
-		if (!config.getVariationDifference())
-		{
-			currId = ItemVariationMapping.map(currId);
-			checkId = ItemVariationMapping.map(checkId);
-		}
-
-		if (currId != checkId)
-		{
-			containerSlot.setBackground(highlightColor);
-			return;
-		}
-
-		// set the color back to the original, because they match
 		containerSlot.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 	}
 
