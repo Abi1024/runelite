@@ -35,26 +35,24 @@ public class EquipmentHelper
 		return itemSet.getItems().stream().allMatch(item -> wearsItem(equipedItems, item));
 	}
 
-	private static boolean wearsItem(Item[] equipedItems, int itemId)
-	{
-		//System.out.println("2nd equipment slot item");
-		for (int i = 0; i < equipedItems.length; i++){
-			if (equipedItems[i].equals(itemId)){
-				return true;
-			}
-		}
-		return false;
-	}
+    private static boolean wearsItem(Item[] equipedItems, EquipmentInventorySlot slot, int itemId)
+    {
+        if (slot.getSlotIdx() >= equipedItems.length){
+            return false;
+        }
+        Item item = equipedItems[slot.getSlotIdx()];
+        if (item == null)
+        {
+            return false;
+        }
+        return item.getId() == itemId;
+    }
 
-	public static boolean wearsItem(Item[] equipedItems, EquipmentSlotItem equipmentSlotItem)
-	{
-		//System.out.println("3rd wears item: ");
-        /*for (Integer i : equipmentSlotItem.getItems()){
-            System.out.println("Item ID: " + i);
-        }*/
-		return equipmentSlotItem.getItems().stream().anyMatch(itemId ->
-				wearsItem(equipedItems,itemId)
-		);
-	}
+    public static boolean wearsItem(Item[] equipedItems, EquipmentSlotItem equipmentSlotItem)
+    {
+        return equipmentSlotItem.getItems().stream().anyMatch(itemId ->
+                wearsItem(equipedItems, equipmentSlotItem.getEquipmentSlot(), itemId)
+        );
+    }
 
 }
