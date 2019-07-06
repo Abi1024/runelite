@@ -92,17 +92,15 @@ public class InventorySetupEquipmentPanel extends InventorySetupContainerPanel
 
 	}
 
-	void highlightDifferences(final ArrayList<InventorySetupItem> currEquipment, final InventorySetup inventorySetup)
+	void highlightDifferentSlots(HashMap<Integer,Integer> current, final InventorySetup inventorySetup)
 	{
 		final ArrayList<InventorySetupItem> equipToCheck = inventorySetup.getEquipment();
-
-		assert currEquipment.size() == equipToCheck.size() : "size mismatch";
 
 		for (final EquipmentInventorySlot slot : EquipmentInventorySlot.values())
 		{
 
 			int slotIdx = slot.getSlotIdx();
-			super.highlightDifferentSlotColor(equipToCheck.get(slotIdx), currEquipment.get(slotIdx), equipmentSlots.get(slot));
+			super.highlightDifferentSlotColor(equipToCheck.get(slotIdx), current, equipmentSlots.get(slot));
 		}
 	}
 
