@@ -29,12 +29,9 @@
 package net.runelite.client.plugins.suppliestracker;
 
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -49,17 +46,11 @@ import net.runelite.http.api.item.ItemPrice;
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static net.runelite.api.AnimationID.*;
 import static net.runelite.api.ItemID.*;
-import static net.runelite.api.ObjectID.CANNON_BASE;
-import static net.runelite.api.ProjectileID.CANNONBALL;
-import static net.runelite.api.ProjectileID.GRANITE_CANNONBALL;
 import static net.runelite.client.plugins.suppliestracker.ActionType.*;
 
 
@@ -73,12 +64,6 @@ import static net.runelite.client.plugins.suppliestracker.ActionType.*;
 @Slf4j
 public class SuppliesTrackerPlugin extends Plugin
 {
-    @Inject
-    private ConfigManager configManager;
-
-    private static final String CONFIG_GROUP = "suppliestracker";
-    private static final String CONFIG_KEY = "supplies";
-
 	private static final String POTION_PATTERN = "[(]\\d[)]";
 
 	private static final String EAT_PATTERN = "^eat";
@@ -108,24 +93,12 @@ public class SuppliesTrackerPlugin extends Plugin
 	private static final Random random = new Random();
 
 	private static final int[] THROWING_IDS = new int[]{BRONZE_DART, IRON_DART, STEEL_DART, BLACK_DART, MITHRIL_DART, ADAMANT_DART, RUNE_DART, DRAGON_DART, BRONZE_KNIFE, IRON_KNIFE, STEEL_KNIFE, BLACK_KNIFE, MITHRIL_KNIFE, ADAMANT_KNIFE, RUNE_KNIFE, BRONZE_THROWNAXE, IRON_THROWNAXE, STEEL_THROWNAXE, MITHRIL_THROWNAXE, ADAMANT_THROWNAXE, RUNE_THROWNAXE, DRAGON_KNIFE, DRAGON_KNIFE_22812, DRAGON_KNIFE_22814, DRAGON_KNIFEP_22808, DRAGON_KNIFEP_22810, DRAGON_KNIFEP, DRAGON_THROWNAXE, CHINCHOMPA_10033, RED_CHINCHOMPA_10034, BLACK_CHINCHOMPA};
-	private static final int[] RUNE_IDS = new int[]{AIR_RUNE, WATER_RUNE, EARTH_RUNE, FIRE_RUNE, MIND_RUNE, BODY_RUNE, COSMIC_RUNE, CHAOS_RUNE, NATURE_RUNE, LAW_RUNE, DEATH_RUNE, ASTRAL_RUNE, BLOOD_RUNE, SOUL_RUNE, WRATH_RUNE, MIST_RUNE, DUST_RUNE, MUD_RUNE, SMOKE_RUNE, STEAM_RUNE, LAVA_RUNE};
-
-	//time in milliseconds between varbitchanged and animationchanged when casting spell with runepouch runes
-	private static final int DELAY = 100;
-
-	//time in milliseconds between menuentryclicked and varbitchanged when casting spell with runepouch runes
-	private static final int DELAY_2 = 700;
-
-	private boolean cannonPlaced;
-
-	private WorldPoint cannonPosition = null;
+	private static final int[] RUNE_IDS = new int[]{AIR_RUNE, WATER_RUNE, EARTH_RUNE, MIND_RUNE, BODY_RUNE, COSMIC_RUNE, CHAOS_RUNE, NATURE_RUNE, LAW_RUNE, DEATH_RUNE, ASTRAL_RUNE, BLOOD_RUNE, SOUL_RUNE, WRATH_RUNE, MIST_RUNE, DUST_RUNE, MUD_RUNE, SMOKE_RUNE, STEAM_RUNE, LAVA_RUNE};
 
 	//Hold Supply Data
 	private static HashMap<Integer, SuppliesTrackerItem> suppliesEntry = new HashMap<>();
 	private ItemContainer old;
 	private Deque<MenuAction> actionStack = new ArrayDeque<>();
-	private Deque<RunePouchState> pouchChangedEvents = new ArrayDeque<>();
-	private RunePouchState pouchChangedtrackEvent = null;
 	private int ammoId = 0;
 	private int ammoAmount = 0;
 	private int thrownId = 0;
@@ -141,17 +114,6 @@ public class SuppliesTrackerPlugin extends Plugin
 	private int attackStyleVarbit = -1;
 	private int ticks = 0;
 	private int ticksInAnimation;
-
-	private static final Varbits[] AMOUNT_VARBITS =
-			{
-					Varbits.RUNE_POUCH_AMOUNT1, Varbits.RUNE_POUCH_AMOUNT2, Varbits.RUNE_POUCH_AMOUNT3
-			};
-	private static final Varbits[] RUNE_VARBITS =
-			{
-					Varbits.RUNE_POUCH_RUNE1, Varbits.RUNE_POUCH_RUNE2, Varbits.RUNE_POUCH_RUNE3
-			};
-
-	private RunePouchState storedPouchState = new RunePouchState();
 
 	@Inject
 	private ClientToolbar clientToolbar;
@@ -182,28 +144,6 @@ public class SuppliesTrackerPlugin extends Plugin
 			.build();
 
 		clientToolbar.addNavigation(navButton);
-		loadConfig();
-		if (client.getGameState() == GameState.LOGGED_IN){
-			storedPouchState = getPouchState();
-		}
-	}
-
-	private RunePouchState getPouchState(){
-		int[] new_amounts = new int[3];
-		int[] new_ids = new int[3];
-		for (int i = 0; i < 3; i++){
-			new_amounts[i] = client.getVar(AMOUNT_VARBITS[i]);
-			if (new_amounts[i] <= 0){
-				new_ids[i] = -1;
-			}else{
-				if(client.getVar(RUNE_VARBITS[i]) == 0) {
-					new_ids[i] = -1;
-				}else{
-					new_ids[i] = Runes.getRune(client.getVar(RUNE_VARBITS[i])).getItemId();
-				}
-			}
-		}
-		return new RunePouchState(new_amounts,new_ids,System.currentTimeMillis());
 	}
 
 	@Override
@@ -221,14 +161,11 @@ public class SuppliesTrackerPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick tick)
 	{
-		if (pouchChangedtrackEvent != null && System.currentTimeMillis() - pouchChangedtrackEvent.getTime() >= DELAY_2){
-			pouchChangedtrackEvent = null;
-		}
 		Player player = client.getLocalPlayer();
 		if (player.getAnimation() == BLOWPIPE_ATTACK)
 		{
 			ticks++;
-        }
+		}
 		if (ticks == ticksInAnimation && (player.getAnimation() == BLOWPIPE_ATTACK))
 		{
 			double ava_percent = getAccumulatorPercent();
@@ -304,51 +241,6 @@ public class SuppliesTrackerPlugin extends Plugin
 				}
 			}
 		}
-		boolean flush_events = true;
-		RunePouchState currentPouchState = getPouchState();
-		if(pouchChangedtrackEvent != null){
-			RunePouchState pouch = pouchChangedtrackEvent;
-			if(!RunePouchState.equal_pouches(pouch,currentPouchState)){
-				for (int i = 0; i < 3; i++){
-					if (currentPouchState.getIds()[i] != pouch.getIds()[i]){
-						buildEntries(pouch.getIds()[i],pouch.getAmount()[i]);
-					}else{
-						int amount_changed = pouch.getAmount()[i] - currentPouchState.getAmount()[i];
-						if (amount_changed > 0){
-							buildEntries(pouch.getIds()[i],amount_changed);
-						}
-					}
-				}
-				pouchChangedtrackEvent = new RunePouchState(currentPouchState.getAmount(),currentPouchState.getIds(),pouch.getTime());
-			}
-		}
-		if (!RunePouchState.equal_pouches(currentPouchState, storedPouchState)) {
-			int[] amount_change = new int[3];
-			int[] ids = new int[3];
-			for (int i = 0; i < 3; i++){
-				if (currentPouchState.getIds()[i] != storedPouchState.getIds()[i]){
-					amount_change[i] = storedPouchState.getAmount()[i];
-				}else{
-					amount_change[i] = storedPouchState.getAmount()[i] - currentPouchState.getAmount()[i];
-				}
-				ids[i] = storedPouchState.getIds()[i];
-			}
-			pouchChangedEvents.push(new RunePouchState(amount_change,ids,System.currentTimeMillis()));
-			storedPouchState = currentPouchState;
-		}
-		flush_events = true;
-		while (flush_events){
-			if (!pouchChangedEvents.isEmpty()){
-				if (System.currentTimeMillis() - pouchChangedEvents.peek().getTime() > DELAY){
-					pouchChangedEvents.pop();
-				}else{
-					flush_events = false;
-				}
-			}else{
-				flush_events = false;
-			}
-		}
-
 	}
 
 	/**
@@ -393,8 +285,6 @@ public class SuppliesTrackerPlugin extends Plugin
 		}
 	}
 
-
-
 	/*@Subscribe
 	public void onCannonballFired(CannonballFired cannonballFired)
 	{
@@ -404,130 +294,52 @@ public class SuppliesTrackerPlugin extends Plugin
 	@Subscribe
 	public void onAnimationChanged(AnimationChanged animationChanged)
 	{
-		if (animationChanged.getActor().getAnimation() == IDLE){
-			return;
-		}
-		/*we first test for whether the player is being attacked by a revenant while wielding a
-		charged bracelet*/
-		if (animationChanged.getActor() != client.getLocalPlayer()){
-			if (animationChanged.getActor() == null){
-				return;
-			}
-			if (animationChanged.getActor().getName() == null){
-				return;
-			}
-			if (animationChanged.getActor().getName().contains("Revenant")){
-				if (animationChanged.getActor().getInteracting() !=  client.getLocalPlayer()){
-					return;
-				}
-				//we need to account for all the different revenant attack animations
-				switch(animationChanged.getActor().getAnimation()){
-					case 169:
-					case 4651:
-					case 6972:
-					case 7820:
-					case 2731:
-					case 6579:
-					case 164:
-					case 4322:
-					case 1582:
-					case 6600:
-					case 1978:
-					case 69:
-					case 4652:
-					case 1581:
-						ItemContainer container = client.getItemContainer(InventoryID.EQUIPMENT);
-						if (container.getItems().length > EquipmentInventorySlot.GLOVES.getSlotIdx()){
-							if (container.getItems()[EquipmentInventorySlot.GLOVES.getSlotIdx()].getId() == BRACELET_OF_ETHEREUM){
-								buildEntries(REVENANT_ETHER);
-							}
-						}
-						break;
-					default:
-						System.out.println(animationChanged.getActor().getName());
-						System.out.println("Attack animation: " +
-								animationChanged.getActor().getAnimation());
-						break;
-				}
-			}
-			return;
-		}
-		int animationID = animationChanged.getActor().getAnimation();
-
-		switch(animationID){
-			//test for charged craw's bow attack
-			case(426): {
-				ItemContainer equipedItems = client.getItemContainer(InventoryID.EQUIPMENT);
-				if (equipedItems.getItems().length > EQUIPMENT_MAINHAND_SLOT) {
-					if (equipedItems.getItems()[EQUIPMENT_MAINHAND_SLOT].getId() == CRAWS_BOW) {
-						buildEntries(REVENANT_ETHER);
-					}
-				}
-				break;
-			}
-			//test for viggora's chainmace attack
-			case(245): {
-				ItemContainer equipedItems = client.getItemContainer(InventoryID.EQUIPMENT);
-				if (equipedItems.getItems().length > EQUIPMENT_MAINHAND_SLOT) {
-					if (equipedItems.getItems()[EQUIPMENT_MAINHAND_SLOT].getId() == VIGGORAS_CHAINMACE) {
-						buildEntries(REVENANT_ETHER);
-					}
-				}
-				break;
-			}
-			case (HIGH_LEVEL_MAGIC_ATTACK):
-				switch (mainHand) {
-					case TRIDENT_OF_THE_SEAS_E:
-					case TRIDENT_OF_THE_SEAS:
-					case TRIDENT_OF_THE_SEAS_FULL:
-						buildEntries(CHAOS_RUNE);
-						buildEntries(DEATH_RUNE);
-						buildEntries(FIRE_RUNE, 5);
-						buildEntries(COINS_995, 10);
-						break;
-					case TRIDENT_OF_THE_SWAMP_E:
-					case TRIDENT_OF_THE_SWAMP:
-					case UNCHARGED_TOXIC_TRIDENT:
-					case UNCHARGED_TOXIC_TRIDENT_E:
-						buildEntries(CHAOS_RUNE);
-						buildEntries(DEATH_RUNE);
-						buildEntries(FIRE_RUNE, 5);
-						buildEntries(ZULRAHS_SCALES);
-						break;
-					case SANGUINESTI_STAFF:
-					case SANGUINESTI_STAFF_UNCHARGED:
-						buildEntries(BLOOD_RUNE, 3);
-						break;
-					default:
-						processCombatSpell();
-						break;
-				}
-				break;
-			case LOW_LEVEL_MAGIC_ATTACK:
-			case VERY_HIGH_LEVEL_MAGIC_ATTACK:
-				processCombatSpell();
-				break;
-			default:
-				break;
-		}
-	}
-
-	public void processCombatSpell(){
-		old = client.getItemContainer(InventoryID.INVENTORY);
-		if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
-				a.getType() == CAST))
+		if (animationChanged.getActor() == client.getLocalPlayer())
 		{
-			MenuAction newAction = new MenuAction(CAST, old.getItems());
-			actionStack.push(newAction);
-		}
-		while (!pouchChangedEvents.isEmpty()){
-			RunePouchState event = pouchChangedEvents.pop();
-			if (System.currentTimeMillis() - event.getTime() < DELAY){
-				for (int i = 0; i < 3; i++){
-					if (event.getAmount()[i] <= 0){
-						continue;
+			if (animationChanged.getActor().getAnimation() == HIGH_LEVEL_MAGIC_ATTACK)
+			{
+				//Trident of the seas
+				if (mainHand == TRIDENT_OF_THE_SEAS || mainHand == TRIDENT_OF_THE_SEAS_E || mainHand == TRIDENT_OF_THE_SEAS_FULL)
+				{
+					buildEntries(CHAOS_RUNE);
+					buildEntries(DEATH_RUNE);
+					buildEntries(FIRE_RUNE, 5);
+					buildEntries(COINS_995, 10);
+				}
+				//Trident of the swamp
+				else if (mainHand == TRIDENT_OF_THE_SWAMP_E || mainHand == TRIDENT_OF_THE_SWAMP || mainHand == UNCHARGED_TOXIC_TRIDENT_E || mainHand == UNCHARGED_TOXIC_TRIDENT)
+				{
+					buildEntries(CHAOS_RUNE);
+					buildEntries(DEATH_RUNE);
+					buildEntries(FIRE_RUNE, 5);
+					buildEntries(ZULRAHS_SCALES);
+				}
+				//Sang Staff
+				else if (mainHand == SANGUINESTI_STAFF || mainHand == SANGUINESTI_STAFF_UNCHARGED)
+				{
+					buildEntries(BLOOD_RUNE, 3);
+				}
+				else
+				{
+					old = client.getItemContainer(InventoryID.INVENTORY);
+
+					if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
+						a.getType() == CAST))
+					{
+						MenuAction newAction = new MenuAction(CAST, old.getItems());
+						actionStack.push(newAction);
 					}
-					buildEntries(event.getIds()[i],event.getAmount()[i]);
+				}
+			}
+			else if (animationChanged.getActor().getAnimation() == LOW_LEVEL_MAGIC_ATTACK)
+			{
+				old = client.getItemContainer(InventoryID.INVENTORY);
+
+				if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
+					a.getType() == CAST))
+				{
+					MenuAction newAction = new MenuAction(CAST, old.getItems());
+					actionStack.push(newAction);
 				}
 			}
 		}
@@ -620,8 +432,6 @@ public class SuppliesTrackerPlugin extends Plugin
 						thrownAmount = mainHandItem.getQuantity();
 						throwingAmmoLoaded = true;
 					}
-				}else{
-					throwingAmmoLoaded = false;
 				}
 			}
 			//Ammo tracking
@@ -663,24 +473,8 @@ public class SuppliesTrackerPlugin extends Plugin
 	}
 
 	@Subscribe
-	public void onGameObjectSpawned(GameObjectSpawned event)
-	{
-		GameObject gameObject = event.getGameObject();
-
-		Player localPlayer = client.getLocalPlayer();
-		if (gameObject.getId() == CANNON_BASE && !cannonPlaced)
-		{
-			if (localPlayer.getWorldLocation().distanceTo(gameObject.getWorldLocation()) <= 2
-					&& localPlayer.getAnimation() == AnimationID.BURYING_BONES)
-			{
-				cannonPosition = gameObject.getWorldLocation();
-			}
-		}
-	}
-
-	@Subscribe
 	public void onMenuOptionClicked(final MenuOptionClicked event)
-    {
+	{
 		// Uses stacks to push/pop for tick eating
 		// Create pattern to find eat/drink at beginning
 		Pattern eatPattern = Pattern.compile(EAT_PATTERN);
@@ -733,53 +527,15 @@ public class SuppliesTrackerPlugin extends Plugin
 		if (spellPattern.matcher(event.getMenuOption().toLowerCase()).find())
 		{
 			old = client.getItemContainer(InventoryID.INVENTORY);
+
 			if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
 				a.getType() == CAST))
 			{
 				MenuAction newAction = new MenuAction(CAST, old.getItems());
 				actionStack.push(newAction);
 			}
-			if (pouchChangedtrackEvent == null || System.currentTimeMillis() - pouchChangedtrackEvent.getTime() >= DELAY_2){
-				pouchChangedtrackEvent = getPouchState();
-			}
 		}
 	}
-
-	@Subscribe
-	public void onProjectileMoved(ProjectileMoved event)
-	{
-		Projectile projectile = event.getProjectile();
-
-		if ((projectile.getId() == ProjectileID.CANNONBALL || projectile.getId() == ProjectileID.GRANITE_CANNONBALL) && cannonPosition != null)
-		{
-			WorldPoint projectileLoc = WorldPoint.fromLocal(client, projectile.getX1(), projectile.getY1(), client.getPlane());
-			if(cannonPosition == null){
-				return;
-			}
-			//Check to see if projectile x,y is 0 else it will continuously decrease while ball is flying.
-			if (projectileLoc.equals(cannonPosition) && projectile.getX() == 0 && projectile.getY() == 0)
-			{
-				switch(projectile.getId()){
-					case(CANNONBALL):
-						buildEntries(ItemID.CANNONBALL);
-						break;
-					case(GRANITE_CANNONBALL):
-						buildEntries(ItemID.GRANITE_CANNONBALL);
-				}
-			}
-		}
-	}
-
-	@Subscribe
-	public void onChatMessage(ChatMessage event){
-		if (event.getMessage().contains("You pick up the cannon")
-				|| event.getMessage().contains("Your cannon has decayed. Speak to Nulodion to get a new one!"))
-		{
-			cannonPosition = null;
-		}
-	}
-
-
 
 	/**
 	 * Checks if item name is potion
@@ -855,22 +611,17 @@ public class SuppliesTrackerPlugin extends Plugin
 	 */
 	private void buildEntries(int itemId, int count)
 	{
-		if (count <= 0){
-			System.out.println("Supply Tracker, ID: " + itemId);
-			Throwable t = new Throwable();
-			t.printStackTrace();
-		}
 		final ItemComposition itemComposition = itemManager.getItemComposition(itemId);
 		String name = itemComposition.getName();
-		if (name == null){
-			return;
-		}
 		long calculatedPrice;
 
 		for (String raidsConsumables : RAIDS_CONSUMABLES)
-            if (name.toLowerCase().contains(raidsConsumables)) {
-                return;
-            }
+		{
+			if (name.toLowerCase().contains(raidsConsumables))
+			{
+				return;
+			}
+		}
 
 		// convert potions, pizzas/pies, and cakes to their full equivalents
 		// e.g. a half pizza becomes full pizza, 3 dose potion becomes 4, etc...
@@ -912,48 +663,9 @@ public class SuppliesTrackerPlugin extends Plugin
 			calculatedPrice);
 
 		suppliesEntry.put(itemId, newEntry);
-		updateConfig();
 		SwingUtilities.invokeLater(() ->
 			panel.addItem(newEntry));
 	}
-
-    private void updateConfig()
-    {
-        if (suppliesEntry.isEmpty()){
-            configManager.unsetConfiguration(CONFIG_GROUP, CONFIG_KEY);
-        }
-
-        final Gson gson = new Gson();
-        final String json = gson.toJson(suppliesEntry);
-        configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY, json);
-    }
-
-    private void loadConfig()
-    {
-        // serialize the internal data structure from the json in the configuration
-        final String json = configManager.getConfiguration(CONFIG_GROUP, CONFIG_KEY);
-        if (json == null || json.isEmpty())
-        {
-            suppliesEntry.clear();
-        }
-        else
-        {
-            final Gson gson = new Gson();
-            Type type = new TypeToken<HashMap<Integer, SuppliesTrackerItem>>()
-            {
-
-            }.getType();
-            suppliesEntry.clear();
-            suppliesEntry.putAll(gson.fromJson(json, type));
-        }
-
-        for (final Integer itemID : suppliesEntry.keySet())
-        {
-            SwingUtilities.invokeLater(() ->
-                    panel.addItem(suppliesEntry.get(itemID)));
-        }
-
-    }
 
 	/**
 	 * reset all item stacks
@@ -961,7 +673,6 @@ public class SuppliesTrackerPlugin extends Plugin
 	void clearSupplies()
 	{
 		suppliesEntry.clear();
-		updateConfig();
 	}
 
 	/**
@@ -972,7 +683,6 @@ public class SuppliesTrackerPlugin extends Plugin
 	void clearItem(int itemId)
 	{
 		suppliesEntry.remove(itemId);
-        updateConfig();
 	}
 
 	/**

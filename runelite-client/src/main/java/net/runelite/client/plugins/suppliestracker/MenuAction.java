@@ -27,7 +27,6 @@ package net.runelite.client.plugins.suppliestracker;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.runelite.api.Item;
-import net.runelite.api.Varbits;
 
 /**
  * Data class that tracks all info related to a menu click action
@@ -54,6 +53,5 @@ public class MenuAction
 			this.itemID = itemID;
 			this.slot = slot;
 		}
-
 	}
 }

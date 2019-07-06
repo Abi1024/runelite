@@ -61,8 +61,7 @@ public enum ItemType
 		if (item.getName().toLowerCase().contains("bolt") || item.getName().toLowerCase().contains("dart")
 			|| item.getName().toLowerCase().contains("arrow") || item.getName().toLowerCase().contains("javelin")
 			|| item.getName().toLowerCase().contains("knive") || item.getName().toLowerCase().contains("throwing")
-			|| item.getName().toLowerCase().contains("zulrah's scale") || item.getName().toLowerCase().contains("cannonball")
-			|| item.getName().toLowerCase().contains("revenant ether"))
+			|| item.getName().toLowerCase().contains("zulrah's scale") || item.getName().toLowerCase().contains("cannonball"))
 		{
 			return ItemType.AMMO;
 		}
