@@ -301,22 +301,23 @@ public class InventorySetupPlugin extends Plugin
 			return;
 		}
 
-		// check to see that the container is the equipment or inventory
-		ItemContainer container = event.getItemContainer();
+        ArrayList<InventorySetupItem> normInv = getNormalizedContainer(InventoryID.INVENTORY);
+        ArrayList<InventorySetupItem> normEqp = getNormalizedContainer(InventoryID.EQUIPMENT);
+        final InventorySetup inventorySetup = inventorySetups.get(selectedInventorySetup);
+        panel.highlightDifferences(normInv, normEqp, inventorySetup);
 
-		if (container == client.getItemContainer(InventoryID.INVENTORY))
-		{
-			ArrayList<InventorySetupItem> normContainer = getNormalizedContainer(InventoryID.INVENTORY);
-			final InventorySetup setup = inventorySetups.get(selectedInventorySetup);
-			panel.highlightDifferences(normContainer, setup, InventoryID.INVENTORY);
-		}
-		else if (container == client.getItemContainer(InventoryID.EQUIPMENT))
-		{
-			ArrayList<InventorySetupItem> normContainer = getNormalizedContainer(InventoryID.EQUIPMENT);
-			final InventorySetup setup = inventorySetups.get(selectedInventorySetup);
-			panel.highlightDifferences(normContainer, setup, InventoryID.EQUIPMENT);
-		}
+	}
 
+	public void add_to_container(ArrayList<InventorySetupItem> equipment_container, HashMap<Integer, Integer> container) {
+		for (InventorySetupItem item : equipment_container){
+			int itemID = !getConfig().getVariationDifference() ? ItemVariationMapping.map(item.getId()) : item.getId();
+			if (!container.containsKey(itemID)){
+				container.put(itemID,item.getQuantity());
+			}else{
+				int current_val = container.get(itemID);
+				container.put(itemID,current_val + item.getQuantity());
+			}
+		}
 	}
 
 	@Subscribe
