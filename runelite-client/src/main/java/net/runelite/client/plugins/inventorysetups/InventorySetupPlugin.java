@@ -350,9 +350,9 @@ public class InventorySetupPlugin extends Plugin
 		assert id == InventoryID.INVENTORY || id == InventoryID.EQUIPMENT : "invalid inventory ID";
 
 		final ItemContainer container = client.getItemContainer(id);
-		if (container != null){
+		/*if (container != null){
             System.out.println("ItemContainer size: " + container.getItems().length);
-        }
+        }*/
 		ArrayList<InventorySetupItem> newContainer = new ArrayList<>();
 
 		Item[] items = null;
