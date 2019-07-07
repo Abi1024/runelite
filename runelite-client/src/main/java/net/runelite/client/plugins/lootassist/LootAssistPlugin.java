@@ -76,10 +76,8 @@ public class LootAssistPlugin extends Plugin
 	public void onGameStateChanged(GameStateChanged event)
 	{
 		if (event.getGameState() != GameState.LOADING && event.getGameState() != GameState.LOGGED_IN) {
-		    //System.out.println(event.getGameState().name());
 			lootPiles.clear();
 		}
-        //System.out.println("NEW GAME STATE: " + event.getGameState().name());
 	}
 
 	@Subscribe

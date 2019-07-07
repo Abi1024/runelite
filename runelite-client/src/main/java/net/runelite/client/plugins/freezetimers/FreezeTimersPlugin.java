@@ -184,13 +184,10 @@ public class FreezeTimersPlugin extends Plugin
     @Subscribe
     public void onOverheadTextChanged(OverheadTextChanged event)
     {
-        //System.out.println("SENDER: " + event.getActor().getName());
-        //System.out.println("Mesage: " + event.getOverheadText());
         if (!event.getOverheadText().equals("Taste vengeance!")){
             return;
         }
         Actor actor = event.getActor();
-        //System.out.println("TRIGGERED VENGEANCE: " + actor.getName());
         if ((actor != null) && (timers.getTimerEnd(actor,TimerType.VENG) >= System.currentTimeMillis())){
             timers.removeAllTimers(actor);
             playerLocations.remove(actor);

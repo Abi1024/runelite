@@ -108,9 +108,6 @@ public class HatCounterPlugin extends Plugin
                 continue;
             }
             int hatID = (rawID > 512) ? rawID - 512 : 0;
-            //System.out.println(player.getName());
-            //System.out.println(String.valueOf(rawID));
-            //System.out.println(Arrays.toString(player.getPlayerComposition().getEquipmentIds()));
             if (hatID <= 0) {
                 continue;
             }
@@ -130,8 +127,6 @@ public class HatCounterPlugin extends Plugin
                                 .thenComparingInt(Map.Entry::getKey)
                 )
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-        //System.out.println("HATS");
-        //System.out.println(hats.toString());
         boolean inDeadman = client.getWorldType().stream().anyMatch(x ->
                 x == WorldType.DEADMAN || x == WorldType.SEASONAL_DEADMAN);
         boolean inPvp = client.getWorldType().stream().anyMatch(x ->
