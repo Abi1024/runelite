@@ -29,6 +29,8 @@
 package net.runelite.client.plugins.suppliestracker;
 
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
@@ -38,6 +40,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.inventorysetups.InventorySetup;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
@@ -46,6 +49,7 @@ import net.runelite.http.api.item.ItemPrice;
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -64,6 +68,12 @@ import static net.runelite.client.plugins.suppliestracker.ActionType.*;
 @Slf4j
 public class SuppliesTrackerPlugin extends Plugin
 {
+    @Inject
+    private ConfigManager configManager;
+
+    private static final String CONFIG_GROUP = "suppliestracker";
+    private static final String CONFIG_KEY = "supplies";
+
 	private static final String POTION_PATTERN = "[(]\\d[)]";
 
 	private static final String EAT_PATTERN = "^eat";
@@ -144,6 +154,7 @@ public class SuppliesTrackerPlugin extends Plugin
 			.build();
 
 		clientToolbar.addNavigation(navButton);
+		loadConfig();
 	}
 
 	@Override
@@ -165,7 +176,7 @@ public class SuppliesTrackerPlugin extends Plugin
 		if (player.getAnimation() == BLOWPIPE_ATTACK)
 		{
 			ticks++;
-		}
+        }
 		if (ticks == ticksInAnimation && (player.getAnimation() == BLOWPIPE_ATTACK))
 		{
 			double ava_percent = getAccumulatorPercent();
@@ -320,7 +331,7 @@ public class SuppliesTrackerPlugin extends Plugin
 					buildEntries(BLOOD_RUNE, 3);
 				}
 				else
-				{
+                    {
 					old = client.getItemContainer(InventoryID.INVENTORY);
 
 					if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
@@ -474,7 +485,7 @@ public class SuppliesTrackerPlugin extends Plugin
 
 	@Subscribe
 	public void onMenuOptionClicked(final MenuOptionClicked event)
-	{
+    {
 		// Uses stacks to push/pop for tick eating
 		// Create pattern to find eat/drink at beginning
 		Pattern eatPattern = Pattern.compile(EAT_PATTERN);
@@ -616,12 +627,9 @@ public class SuppliesTrackerPlugin extends Plugin
 		long calculatedPrice;
 
 		for (String raidsConsumables : RAIDS_CONSUMABLES)
-		{
-			if (name.toLowerCase().contains(raidsConsumables))
-			{
-				return;
-			}
-		}
+            if (name.toLowerCase().contains(raidsConsumables)) {
+                return;
+            }
 
 		// convert potions, pizzas/pies, and cakes to their full equivalents
 		// e.g. a half pizza becomes full pizza, 3 dose potion becomes 4, etc...
@@ -663,9 +671,48 @@ public class SuppliesTrackerPlugin extends Plugin
 			calculatedPrice);
 
 		suppliesEntry.put(itemId, newEntry);
+		updateConfig();
 		SwingUtilities.invokeLater(() ->
 			panel.addItem(newEntry));
 	}
+
+    private void updateConfig()
+    {
+        if (suppliesEntry.isEmpty()){
+            configManager.unsetConfiguration(CONFIG_GROUP, CONFIG_KEY);
+        }
+
+        final Gson gson = new Gson();
+        final String json = gson.toJson(suppliesEntry);
+        configManager.setConfiguration(CONFIG_GROUP, CONFIG_KEY, json);
+    }
+
+    private void loadConfig()
+    {
+        // serialize the internal data structure from the json in the configuration
+        final String json = configManager.getConfiguration(CONFIG_GROUP, CONFIG_KEY);
+        if (json == null || json.isEmpty())
+        {
+            suppliesEntry.clear();
+        }
+        else
+        {
+            final Gson gson = new Gson();
+            Type type = new TypeToken<HashMap<Integer, SuppliesTrackerItem>>()
+            {
+
+            }.getType();
+            suppliesEntry.clear();
+            suppliesEntry.putAll(gson.fromJson(json, type));
+        }
+
+        for (final Integer itemID : suppliesEntry.keySet())
+        {
+            SwingUtilities.invokeLater(() ->
+                    panel.addItem(suppliesEntry.get(itemID)));
+        }
+
+    }
 
 	/**
 	 * reset all item stacks
@@ -673,6 +720,7 @@ public class SuppliesTrackerPlugin extends Plugin
 	void clearSupplies()
 	{
 		suppliesEntry.clear();
+		updateConfig();
 	}
 
 	/**
@@ -683,6 +731,7 @@ public class SuppliesTrackerPlugin extends Plugin
 	void clearItem(int itemId)
 	{
 		suppliesEntry.remove(itemId);
+        updateConfig();
 	}
 
 	/**
