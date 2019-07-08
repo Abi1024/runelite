@@ -51,6 +51,7 @@ import java.awt.image.BufferedImage;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static net.runelite.api.AnimationID.*;
 import static net.runelite.api.ItemID.*;
@@ -102,12 +103,20 @@ public class SuppliesTrackerPlugin extends Plugin
 	private static final Random random = new Random();
 
 	private static final int[] THROWING_IDS = new int[]{BRONZE_DART, IRON_DART, STEEL_DART, BLACK_DART, MITHRIL_DART, ADAMANT_DART, RUNE_DART, DRAGON_DART, BRONZE_KNIFE, IRON_KNIFE, STEEL_KNIFE, BLACK_KNIFE, MITHRIL_KNIFE, ADAMANT_KNIFE, RUNE_KNIFE, BRONZE_THROWNAXE, IRON_THROWNAXE, STEEL_THROWNAXE, MITHRIL_THROWNAXE, ADAMANT_THROWNAXE, RUNE_THROWNAXE, DRAGON_KNIFE, DRAGON_KNIFE_22812, DRAGON_KNIFE_22814, DRAGON_KNIFEP_22808, DRAGON_KNIFEP_22810, DRAGON_KNIFEP, DRAGON_THROWNAXE, CHINCHOMPA_10033, RED_CHINCHOMPA_10034, BLACK_CHINCHOMPA};
-	private static final int[] RUNE_IDS = new int[]{AIR_RUNE, WATER_RUNE, EARTH_RUNE, MIND_RUNE, BODY_RUNE, COSMIC_RUNE, CHAOS_RUNE, NATURE_RUNE, LAW_RUNE, DEATH_RUNE, ASTRAL_RUNE, BLOOD_RUNE, SOUL_RUNE, WRATH_RUNE, MIST_RUNE, DUST_RUNE, MUD_RUNE, SMOKE_RUNE, STEAM_RUNE, LAVA_RUNE};
+	private static final int[] RUNE_IDS = new int[]{AIR_RUNE, WATER_RUNE, EARTH_RUNE, FIRE_RUNE, MIND_RUNE, BODY_RUNE, COSMIC_RUNE, CHAOS_RUNE, NATURE_RUNE, LAW_RUNE, DEATH_RUNE, ASTRAL_RUNE, BLOOD_RUNE, SOUL_RUNE, WRATH_RUNE, MIST_RUNE, DUST_RUNE, MUD_RUNE, SMOKE_RUNE, STEAM_RUNE, LAVA_RUNE};
+
+	//time in milliseconds between varbitchanged and animationchanged when casting spell with runepouch runes
+	private static final int DELAY = 100;
+
+	//time in milliseconds between menuentryclicked and varbitchanged when casting spell with runepouch runes
+	private static final int DELAY_2 = 700;
 
 	//Hold Supply Data
 	private static HashMap<Integer, SuppliesTrackerItem> suppliesEntry = new HashMap<>();
 	private ItemContainer old;
 	private Deque<MenuAction> actionStack = new ArrayDeque<>();
+	private Deque<RunePouchState> pouchChangedEvents = new ArrayDeque<>();
+	private RunePouchState pouchChangedtrackEvent = null;
 	private int ammoId = 0;
 	private int ammoAmount = 0;
 	private int thrownId = 0;
@@ -123,6 +132,17 @@ public class SuppliesTrackerPlugin extends Plugin
 	private int attackStyleVarbit = -1;
 	private int ticks = 0;
 	private int ticksInAnimation;
+
+	private static final Varbits[] AMOUNT_VARBITS =
+			{
+					Varbits.RUNE_POUCH_AMOUNT1, Varbits.RUNE_POUCH_AMOUNT2, Varbits.RUNE_POUCH_AMOUNT3
+			};
+	private static final Varbits[] RUNE_VARBITS =
+			{
+					Varbits.RUNE_POUCH_RUNE1, Varbits.RUNE_POUCH_RUNE2, Varbits.RUNE_POUCH_RUNE3
+			};
+
+	private RunePouchState storedPouchState = new RunePouchState();
 
 	@Inject
 	private ClientToolbar clientToolbar;
@@ -154,6 +174,27 @@ public class SuppliesTrackerPlugin extends Plugin
 
 		clientToolbar.addNavigation(navButton);
 		loadConfig();
+		if (client.getGameState() == GameState.LOGGED_IN){
+			storedPouchState = getPouchState();
+		}
+	}
+
+	private RunePouchState getPouchState(){
+		int[] new_amounts = new int[3];
+		int[] new_ids = new int[3];
+		for (int i = 0; i < 3; i++){
+			new_amounts[i] = client.getVar(AMOUNT_VARBITS[i]);
+			if (new_amounts[i] <= 0){
+				new_ids[i] = -1;
+			}else{
+				if(client.getVar(RUNE_VARBITS[i]) == 0) {
+					new_ids[i] = -1;
+				}else{
+					new_ids[i] = Runes.getRune(client.getVar(RUNE_VARBITS[i])).getItemId();
+				}
+			}
+		}
+		return new RunePouchState(new_amounts,new_ids,System.currentTimeMillis());
 	}
 
 	@Override
@@ -171,6 +212,9 @@ public class SuppliesTrackerPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick tick)
 	{
+		if (pouchChangedtrackEvent != null && System.currentTimeMillis() - pouchChangedtrackEvent.getTime() >= DELAY_2){
+			pouchChangedtrackEvent = null;
+		}
 		Player player = client.getLocalPlayer();
 		if (player.getAnimation() == BLOWPIPE_ATTACK)
 		{
@@ -251,6 +295,51 @@ public class SuppliesTrackerPlugin extends Plugin
 				}
 			}
 		}
+		boolean flush_events = true;
+		RunePouchState currentPouchState = getPouchState();
+		if(pouchChangedtrackEvent != null){
+			RunePouchState pouch = pouchChangedtrackEvent;
+			if(!RunePouchState.equal_pouches(pouch,currentPouchState)){
+				for (int i = 0; i < 3; i++){
+					if (currentPouchState.getIds()[i] != pouch.getIds()[i]){
+						buildEntries(pouch.getIds()[i],pouch.getAmount()[i]);
+					}else{
+						int amount_changed = pouch.getAmount()[i] - currentPouchState.getAmount()[i];
+						if (amount_changed > 0){
+							buildEntries(pouch.getIds()[i],amount_changed);
+						}
+					}
+				}
+				pouchChangedtrackEvent = new RunePouchState(currentPouchState.getAmount(),currentPouchState.getIds(),pouch.getTime());
+			}
+		}
+		if (!RunePouchState.equal_pouches(currentPouchState, storedPouchState)) {
+			int[] amount_change = new int[3];
+			int[] ids = new int[3];
+			for (int i = 0; i < 3; i++){
+				if (currentPouchState.getIds()[i] != storedPouchState.getIds()[i]){
+					amount_change[i] = storedPouchState.getAmount()[i];
+				}else{t
+					amount_change[i] = storedPouchState.getAmount()[i] - currentPouchState.getAmount()[i];
+				}
+				ids[i] = storedPouchState.getIds()[i];
+			}
+			pouchChangedEvents.push(new RunePouchState(amount_change,ids,System.currentTimeMillis()));
+			storedPouchState = currentPouchState;
+		}
+		flush_events = true;
+		while (flush_events){
+			if (!pouchChangedEvents.isEmpty()){
+				if (System.currentTimeMillis() - pouchChangedEvents.peek().getTime() > DELAY){
+					pouchChangedEvents.pop();
+				}else{
+					flush_events = false;
+				}
+			}else{
+				flush_events = false;
+			}
+		}
+
 	}
 
 	/**
@@ -295,6 +384,8 @@ public class SuppliesTrackerPlugin extends Plugin
 		}
 	}
 
+
+
 	/*@Subscribe
 	public void onCannonballFired(CannonballFired cannonballFired)
 	{
@@ -306,6 +397,7 @@ public class SuppliesTrackerPlugin extends Plugin
 	{
 		if (animationChanged.getActor() == client.getLocalPlayer())
 		{
+			boolean high_level_spell = false;
 			if (animationChanged.getActor().getAnimation() == HIGH_LEVEL_MAGIC_ATTACK)
 			{
 				//Trident of the seas
@@ -329,27 +421,48 @@ public class SuppliesTrackerPlugin extends Plugin
 				{
 					buildEntries(BLOOD_RUNE, 3);
 				}
-				else
-                    {
+				else{
 					old = client.getItemContainer(InventoryID.INVENTORY);
-
 					if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
-						a.getType() == CAST))
+							a.getType() == CAST))
 					{
 						MenuAction newAction = new MenuAction(CAST, old.getItems());
 						actionStack.push(newAction);
 					}
+					while (!pouchChangedEvents.isEmpty()){
+						RunePouchState event = pouchChangedEvents.pop();
+						if (System.currentTimeMillis() - event.getTime() < DELAY){
+							for (int i = 0; i < 3; i++){
+								if (event.getAmount()[i] <= 0){
+									continue;
+								}
+								buildEntries(event.getIds()[i],event.getAmount()[i]);
+							}
+						}
+					}
 				}
 			}
-			else if (animationChanged.getActor().getAnimation() == LOW_LEVEL_MAGIC_ATTACK)
+			else if (animationChanged.getActor().getAnimation() == LOW_LEVEL_MAGIC_ATTACK ||
+					animationChanged.getActor().getAnimation() == VERY_HIGH_LEVEL_MAGIC_ATTACK)
 			{
 				old = client.getItemContainer(InventoryID.INVENTORY);
-
 				if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
 					a.getType() == CAST))
 				{
+
 					MenuAction newAction = new MenuAction(CAST, old.getItems());
 					actionStack.push(newAction);
+				}
+				while (!pouchChangedEvents.isEmpty()){
+					RunePouchState event = pouchChangedEvents.pop();
+					if (System.currentTimeMillis() - event.getTime() < DELAY){
+						for (int i = 0; i < 3; i++){
+							if (event.getAmount()[i] <= 0){
+								continue;
+							}
+							buildEntries(event.getIds()[i],event.getAmount()[i]);
+						}
+					}
 				}
 			}
 		}
@@ -537,12 +650,14 @@ public class SuppliesTrackerPlugin extends Plugin
 		if (spellPattern.matcher(event.getMenuOption().toLowerCase()).find())
 		{
 			old = client.getItemContainer(InventoryID.INVENTORY);
-
 			if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
 				a.getType() == CAST))
 			{
 				MenuAction newAction = new MenuAction(CAST, old.getItems());
 				actionStack.push(newAction);
+			}
+			if (pouchChangedtrackEvent == null || System.currentTimeMillis() - pouchChangedtrackEvent.getTime() >= DELAY_2){
+				pouchChangedtrackEvent = getPouchState();
 			}
 		}
 	}
