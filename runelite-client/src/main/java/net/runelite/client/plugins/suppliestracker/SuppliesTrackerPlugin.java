@@ -34,6 +34,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -48,6 +49,7 @@ import net.runelite.http.api.item.ItemPrice;
 import javax.inject.Inject;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -55,6 +57,9 @@ import java.util.stream.Collectors;
 
 import static net.runelite.api.AnimationID.*;
 import static net.runelite.api.ItemID.*;
+import static net.runelite.api.ObjectID.CANNON_BASE;
+import static net.runelite.api.ProjectileID.CANNONBALL;
+import static net.runelite.api.ProjectileID.GRANITE_CANNONBALL;
 import static net.runelite.client.plugins.suppliestracker.ActionType.*;
 
 
@@ -110,6 +115,10 @@ public class SuppliesTrackerPlugin extends Plugin
 
 	//time in milliseconds between menuentryclicked and varbitchanged when casting spell with runepouch runes
 	private static final int DELAY_2 = 700;
+
+	private boolean cannonPlaced;
+
+	private WorldPoint cannonPosition = null;
 
 	//Hold Supply Data
 	private static HashMap<Integer, SuppliesTrackerItem> suppliesEntry = new HashMap<>();
@@ -319,7 +328,7 @@ public class SuppliesTrackerPlugin extends Plugin
 			for (int i = 0; i < 3; i++){
 				if (currentPouchState.getIds()[i] != storedPouchState.getIds()[i]){
 					amount_change[i] = storedPouchState.getAmount()[i];
-				}else{t
+				}else{
 					amount_change[i] = storedPouchState.getAmount()[i] - currentPouchState.getAmount()[i];
 				}
 				ids[i] = storedPouchState.getIds()[i];
@@ -395,74 +404,85 @@ public class SuppliesTrackerPlugin extends Plugin
 	@Subscribe
 	public void onAnimationChanged(AnimationChanged animationChanged)
 	{
-		if (animationChanged.getActor() == client.getLocalPlayer())
-		{
-			boolean high_level_spell = false;
-			if (animationChanged.getActor().getAnimation() == HIGH_LEVEL_MAGIC_ATTACK)
-			{
-				//Trident of the seas
-				if (mainHand == TRIDENT_OF_THE_SEAS || mainHand == TRIDENT_OF_THE_SEAS_E || mainHand == TRIDENT_OF_THE_SEAS_FULL)
-				{
-					buildEntries(CHAOS_RUNE);
-					buildEntries(DEATH_RUNE);
-					buildEntries(FIRE_RUNE, 5);
-					buildEntries(COINS_995, 10);
-				}
-				//Trident of the swamp
-				else if (mainHand == TRIDENT_OF_THE_SWAMP_E || mainHand == TRIDENT_OF_THE_SWAMP || mainHand == UNCHARGED_TOXIC_TRIDENT_E || mainHand == UNCHARGED_TOXIC_TRIDENT)
-				{
-					buildEntries(CHAOS_RUNE);
-					buildEntries(DEATH_RUNE);
-					buildEntries(FIRE_RUNE, 5);
-					buildEntries(ZULRAHS_SCALES);
-				}
-				//Sang Staff
-				else if (mainHand == SANGUINESTI_STAFF || mainHand == SANGUINESTI_STAFF_UNCHARGED)
-				{
-					buildEntries(BLOOD_RUNE, 3);
-				}
-				else{
-					old = client.getItemContainer(InventoryID.INVENTORY);
-					if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
-							a.getType() == CAST))
-					{
-						MenuAction newAction = new MenuAction(CAST, old.getItems());
-						actionStack.push(newAction);
-					}
-					while (!pouchChangedEvents.isEmpty()){
-						RunePouchState event = pouchChangedEvents.pop();
-						if (System.currentTimeMillis() - event.getTime() < DELAY){
-							for (int i = 0; i < 3; i++){
-								if (event.getAmount()[i] <= 0){
-									continue;
-								}
-								buildEntries(event.getIds()[i],event.getAmount()[i]);
-							}
-						}
-					}
-				}
-			}
-			else if (animationChanged.getActor().getAnimation() == LOW_LEVEL_MAGIC_ATTACK ||
-					animationChanged.getActor().getAnimation() == VERY_HIGH_LEVEL_MAGIC_ATTACK)
-			{
-				old = client.getItemContainer(InventoryID.INVENTORY);
-				if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
-					a.getType() == CAST))
-				{
+		if (animationChanged.getActor() != client.getLocalPlayer()){
+			return;
+		}
+		int animationID = animationChanged.getActor().getAnimation();
 
-					MenuAction newAction = new MenuAction(CAST, old.getItems());
-					actionStack.push(newAction);
-				}
-				while (!pouchChangedEvents.isEmpty()){
-					RunePouchState event = pouchChangedEvents.pop();
-					if (System.currentTimeMillis() - event.getTime() < DELAY){
-						for (int i = 0; i < 3; i++){
-							if (event.getAmount()[i] <= 0){
-								continue;
-							}
-							buildEntries(event.getIds()[i],event.getAmount()[i]);
-						}
+		switch(animationID){
+			//test for charged craw's bow attack
+			case(426): {
+				ItemContainer equipedItems = client.getItemContainer(InventoryID.EQUIPMENT);
+				if (equipedItems.getItems().length > EQUIPMENT_MAINHAND_SLOT) {
+					if (equipedItems.getItems()[EQUIPMENT_MAINHAND_SLOT].getId() == CRAWS_BOW) {
+						buildEntries(REVENANT_ETHER);
 					}
+				}
+				break;
+			}
+			//test for viggora's chainmace attack
+			case(245): {
+				ItemContainer equipedItems = client.getItemContainer(InventoryID.EQUIPMENT);
+				if (equipedItems.getItems().length > EQUIPMENT_MAINHAND_SLOT) {
+					if (equipedItems.getItems()[EQUIPMENT_MAINHAND_SLOT].getId() == VIGGORAS_CHAINMACE) {
+						buildEntries(REVENANT_ETHER);
+					}
+				}
+				break;
+			}
+			case (HIGH_LEVEL_MAGIC_ATTACK):
+				switch (mainHand) {
+					case TRIDENT_OF_THE_SEAS_E:
+					case TRIDENT_OF_THE_SEAS:
+					case TRIDENT_OF_THE_SEAS_FULL:
+						buildEntries(CHAOS_RUNE);
+						buildEntries(DEATH_RUNE);
+						buildEntries(FIRE_RUNE, 5);
+						buildEntries(COINS_995, 10);
+						break;
+					case TRIDENT_OF_THE_SWAMP_E:
+					case TRIDENT_OF_THE_SWAMP:
+					case UNCHARGED_TOXIC_TRIDENT:
+					case UNCHARGED_TOXIC_TRIDENT_E:
+						buildEntries(CHAOS_RUNE);
+						buildEntries(DEATH_RUNE);
+						buildEntries(FIRE_RUNE, 5);
+						buildEntries(ZULRAHS_SCALES);
+						break;
+					case SANGUINESTI_STAFF:
+					case SANGUINESTI_STAFF_UNCHARGED:
+						buildEntries(BLOOD_RUNE, 3);
+						break;
+					default:
+						processCombatSpell();
+						break;
+				}
+				break;
+			case LOW_LEVEL_MAGIC_ATTACK:
+			case VERY_HIGH_LEVEL_MAGIC_ATTACK:
+				processCombatSpell();
+				break;
+			default:
+				break;
+		}
+	}
+
+	public void processCombatSpell(){
+		old = client.getItemContainer(InventoryID.INVENTORY);
+		if (old != null && old.getItems() != null && actionStack.stream().noneMatch(a ->
+				a.getType() == CAST))
+		{
+			MenuAction newAction = new MenuAction(CAST, old.getItems());
+			actionStack.push(newAction);
+		}
+		while (!pouchChangedEvents.isEmpty()){
+			RunePouchState event = pouchChangedEvents.pop();
+			if (System.currentTimeMillis() - event.getTime() < DELAY){
+				for (int i = 0; i < 3; i++){
+					if (event.getAmount()[i] <= 0){
+						continue;
+					}
+					buildEntries(event.getIds()[i],event.getAmount()[i]);
 				}
 			}
 		}
@@ -555,6 +575,8 @@ public class SuppliesTrackerPlugin extends Plugin
 						thrownAmount = mainHandItem.getQuantity();
 						throwingAmmoLoaded = true;
 					}
+				}else{
+					throwingAmmoLoaded = false;
 				}
 			}
 			//Ammo tracking
@@ -592,6 +614,22 @@ public class SuppliesTrackerPlugin extends Plugin
 				}
 			}
 
+		}
+	}
+
+	@Subscribe
+	public void onGameObjectSpawned(GameObjectSpawned event)
+	{
+		GameObject gameObject = event.getGameObject();
+
+		Player localPlayer = client.getLocalPlayer();
+		if (gameObject.getId() == CANNON_BASE && !cannonPlaced)
+		{
+			if (localPlayer.getWorldLocation().distanceTo(gameObject.getWorldLocation()) <= 2
+					&& localPlayer.getAnimation() == AnimationID.BURYING_BONES)
+			{
+				cannonPosition = gameObject.getWorldLocation();
+			}
 		}
 	}
 
@@ -661,6 +699,42 @@ public class SuppliesTrackerPlugin extends Plugin
 			}
 		}
 	}
+
+	@Subscribe
+	public void onProjectileMoved(ProjectileMoved event)
+	{
+		Projectile projectile = event.getProjectile();
+
+		if ((projectile.getId() == ProjectileID.CANNONBALL || projectile.getId() == ProjectileID.GRANITE_CANNONBALL) && cannonPosition != null)
+		{
+			WorldPoint projectileLoc = WorldPoint.fromLocal(client, projectile.getX1(), projectile.getY1(), client.getPlane());
+			if(cannonPosition == null){
+				return;
+			}
+			//Check to see if projectile x,y is 0 else it will continuously decrease while ball is flying.
+			if (projectileLoc.equals(cannonPosition) && projectile.getX() == 0 && projectile.getY() == 0)
+			{
+				switch(projectile.getId()){
+					case(CANNONBALL):
+						buildEntries(ItemID.CANNONBALL);
+						break;
+					case(GRANITE_CANNONBALL):
+						buildEntries(ItemID.GRANITE_CANNONBALL);
+				}
+			}
+		}
+	}
+
+	@Subscribe
+	public void onChatMessage(ChatMessage event){
+		if (event.getMessage().contains("You pick up the cannon")
+				|| event.getMessage().contains("Your cannon has decayed. Speak to Nulodion to get a new one!"))
+		{
+			cannonPosition = null;
+		}
+	}
+
+
 
 	/**
 	 * Checks if item name is potion
