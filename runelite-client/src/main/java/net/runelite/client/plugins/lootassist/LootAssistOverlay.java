@@ -84,7 +84,6 @@ public class LootAssistOverlay extends Overlay
                     OverlayUtil.renderPolygon(graphics, poly, color);
                     OverlayUtil.renderTextLocation(graphics, timeLoc, timeOverlay, config.color());
                     if (textLoc == null){
-                        System.out.println("TEXTLOC IS NULL! " + pile.getPlayerName());
                         continue;
                     }
                     OverlayUtil.renderTextLocation(graphics, textLoc, nameOverlay,  config.color());
