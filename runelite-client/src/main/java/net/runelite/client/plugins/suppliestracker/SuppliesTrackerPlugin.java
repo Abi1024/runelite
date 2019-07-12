@@ -404,7 +404,50 @@ public class SuppliesTrackerPlugin extends Plugin
 	@Subscribe
 	public void onAnimationChanged(AnimationChanged animationChanged)
 	{
+		if (animationChanged.getActor().getAnimation() == IDLE){
+			return;
+		}
+		/*we first test for whether the player is being attacked by a revenant while wielding a
+		charged bracelet*/
 		if (animationChanged.getActor() != client.getLocalPlayer()){
+			if (animationChanged.getActor() == null){
+				return;
+			}
+			if (animationChanged.getActor().getName() == null){
+				return;
+			}
+			if (animationChanged.getActor().getName().contains("Revenant")){
+				if (animationChanged.getActor().getInteracting() !=  client.getLocalPlayer()){
+					return;
+				}
+				//we need to account for all the different revenant attack animations
+				switch(animationChanged.getActor().getAnimation()){
+					case 169:
+					case 4651:
+					case 6972:
+					case 7820:
+					case 2731:
+					case 6579:
+					case 164:
+					case 4322:
+					case 1582:
+					case 6600:
+					case 1978:
+					case 69:
+						ItemContainer container = client.getItemContainer(InventoryID.EQUIPMENT);
+						if (container.getItems().length > EquipmentInventorySlot.GLOVES.getSlotIdx()){
+							if (container.getItems()[EquipmentInventorySlot.GLOVES.getSlotIdx()].getId() == BRACELET_OF_ETHEREUM){
+								buildEntries(REVENANT_ETHER);
+							}
+						}
+						break;
+					default:
+						System.out.println(animationChanged.getActor().getName());
+						System.out.println("Attack animation: " +
+								animationChanged.getActor().getAnimation());
+						break;
+				}
+			}
 			return;
 		}
 		int animationID = animationChanged.getActor().getAnimation();
@@ -810,6 +853,11 @@ public class SuppliesTrackerPlugin extends Plugin
 	 */
 	private void buildEntries(int itemId, int count)
 	{
+		if (count <= 0){
+			System.out.println("Supply Tracker, ID: " + itemId);
+			Throwable t = new Throwable();
+			t.printStackTrace();
+		}
 		final ItemComposition itemComposition = itemManager.getItemComposition(itemId);
 		String name = itemComposition.getName();
 		long calculatedPrice;
