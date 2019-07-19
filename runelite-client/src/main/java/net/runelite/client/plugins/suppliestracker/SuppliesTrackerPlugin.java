@@ -860,6 +860,9 @@ public class SuppliesTrackerPlugin extends Plugin
 		}
 		final ItemComposition itemComposition = itemManager.getItemComposition(itemId);
 		String name = itemComposition.getName();
+		if (name == null){
+			return;
+		}
 		long calculatedPrice;
 
 		for (String raidsConsumables : RAIDS_CONSUMABLES)
