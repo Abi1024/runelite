@@ -155,7 +155,7 @@ public class ChatCommandsPluginTest
 		ChatMessage gauntletMessage = new ChatMessage(null, GAMEMESSAGE, "", "Your Gauntlet completion count is: <col=ff0000>123</col>.", null, 0);
 		chatCommandsPlugin.onChatMessage(gauntletMessage);
 
-		verify(configManager).setConfiguration("killcount.adam", "gauntlet", 123);
+		verify(configManager).setConfiguration("killcount.adam", "gauntlethelper", 123);
 	}
 
 	@Test
@@ -166,7 +166,7 @@ public class ChatCommandsPluginTest
 		ChatMessage corruptedGauntletMessage = new ChatMessage(null, GAMEMESSAGE, "", "Your Corrupted Gauntlet completion count is: <col=ff0000>4729</col>.", null, 0);
 		chatCommandsPlugin.onChatMessage(corruptedGauntletMessage);
 
-		verify(configManager).setConfiguration("killcount.adam", "corrupted gauntlet", 4729);
+		verify(configManager).setConfiguration("killcount.adam", "corrupted gauntlethelper", 4729);
 	}
 
 	@Test
@@ -343,8 +343,8 @@ public class ChatCommandsPluginTest
 		chatMessage = new ChatMessage(null, GAMEMESSAGE, "", "Your Gauntlet completion count is: <col=ff0000>124</col>.", null, 0);
 		chatCommandsPlugin.onChatMessage(chatMessage);
 
-		verify(configManager).setConfiguration(eq("killcount.adam"), eq("gauntlet"), eq(124));
-		verify(configManager).setConfiguration(eq("personalbest.adam"), eq("gauntlet"), eq(7 * 60 + 59));
+		verify(configManager).setConfiguration(eq("killcount.adam"), eq("gauntlethelper"), eq(124));
+		verify(configManager).setConfiguration(eq("personalbest.adam"), eq("gauntlethelper"), eq(7 * 60 + 59));
 	}
 
 	@Test
@@ -358,8 +358,8 @@ public class ChatCommandsPluginTest
 		chatMessage = new ChatMessage(null, GAMEMESSAGE, "", "Your Gauntlet completion count is: <col=ff0000>124</col>.", null, 0);
 		chatCommandsPlugin.onChatMessage(chatMessage);
 
-		verify(configManager).setConfiguration(eq("personalbest.adam"), eq("gauntlet"), eq(10 * 60 + 24));
-		verify(configManager).setConfiguration(eq("killcount.adam"), eq("gauntlet"), eq(124));
+		verify(configManager).setConfiguration(eq("personalbest.adam"), eq("gauntlethelper"), eq(10 * 60 + 24));
+		verify(configManager).setConfiguration(eq("killcount.adam"), eq("gauntlethelper"), eq(124));
 	}
 
 	@Test
