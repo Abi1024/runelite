@@ -211,4 +211,6 @@ public final class AnimationID
 	public static final int HIGH_LEVEL_MAGIC_ATTACK = 1167;
 	public static final int VERY_HIGH_LEVEL_MAGIC_ATTACK = 7855;
 	public static final int BLOWPIPE_ATTACK = 5061;
+
+
 }
