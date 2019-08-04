@@ -1,13 +1,11 @@
 package net.runelite.client.plugins.gauntlethelper;
 
-import net.runelite.api.Client;
-import net.runelite.api.NPC;
-import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.*;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.overlay.Overlay;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.util.Optional;
 
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -16,15 +14,18 @@ public class GauntletHelperOverlay extends Overlay {
     private final GauntletHelperConfig config;
     private final GauntletHelperPlugin plugin;
 
+    private final ItemManager manager;
+
     @Inject
     private Client client;
 
     @Inject
-    GauntletHelperOverlay(Client client, GauntletHelperConfig config, GauntletHelperPlugin plugin)
+    GauntletHelperOverlay(Client client, GauntletHelperConfig config, GauntletHelperPlugin plugin, ItemManager manager)
     {
         this.client = client;
         this.config = config;
         this.plugin = plugin;
+        this.manager = manager;
         setPosition(OverlayPosition.DYNAMIC);
         setLayer(OverlayLayer.ABOVE_SCENE);
     }
@@ -33,9 +34,22 @@ public class GauntletHelperOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D graphics)
     {
-        if (!config.showBossStyle()){
+        if (!plugin.isInGauntlet()){
             return null;
         }
+
+        if (config.showBossStyle()){
+            renderBoss(graphics);
+        }
+        if (config.supplySpots()){
+            renderSupplySpots(graphics);
+        }
+
+        return null;
+
+    }
+
+    public void renderBoss(Graphics2D graphics){
         Color color = null;
         if (plugin.is_boss_using_range){
             color = new Color(0,255,0);
@@ -43,22 +57,56 @@ public class GauntletHelperOverlay extends Overlay {
             color = new Color(255, 0, 0);
         }
         if (!client.getNpcs().stream().filter(npc -> (npc.getName() != null) && (npc.getName().contains("Hunllef"))).findFirst().isPresent()){
-            return null;
+            return;
         }
         NPC hunllef = client.getNpcs().stream().filter(npc -> (npc.getName() != null) && (npc.getName().contains("Hunllef"))).findFirst().get();
-        renderBoss(graphics,color,hunllef);
-        return null;
+        Polygon objectClickbox = hunllef.getConvexHull();
+        drawPolygon(graphics, objectClickbox, color);
     }
 
-    public void renderBoss(Graphics2D graphics, Color color, NPC npc){
-        Polygon objectClickbox = npc.getConvexHull();
-        if (objectClickbox != null)
+    public void renderObject(Graphics2D graphics, Color color, GameObject object){
+        Polygon objectClickbox = object.getConvexHull();
+        drawPolygon(graphics, objectClickbox, color);
+    }
+
+    public void drawPolygon(Graphics2D graphics, Polygon polygon, Color color){
+        if (polygon != null)
         {
             graphics.setColor(color);
             graphics.setStroke(new BasicStroke(2));
-            graphics.draw(objectClickbox);
+            graphics.draw(polygon);
             graphics.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 20));
-            graphics.fill(objectClickbox);
+            graphics.fill(polygon);
         }
     }
+    public void renderSupplySpots(Graphics2D graphics){
+        if (plugin.getSupplies().fish < config.num_fish()){
+            for (GameObject spot: plugin.getFishing_spots().values()){
+                renderObject(graphics, new Color(0,255,0),spot);
+            }
+        }
+        if (plugin.getSupplies().ore < config.num_resources()){
+            for (GameObject spot: plugin.getMining_spots().values()){
+                renderObject(graphics, new Color(0,255,0),spot);
+            }
+        }
+        if (plugin.getSupplies().bark < config.num_resources()){
+            for (GameObject spot: plugin.getBark_spots().values()){
+                renderObject(graphics, new Color(0,255,0),spot);
+            }
+        }
+        if (plugin.getSupplies().linum < config.num_resources()){
+            for (GameObject spot: plugin.getLinum_spots().values()){
+                renderObject(graphics, new Color(0,255,0),spot);
+            }
+        }
+        if (plugin.getSupplies().herbs < config.num_herbs()){
+            for (GameObject spot: plugin.getHerb_spots().values()){
+                renderObject(graphics, new Color(0,255,0),spot);
+            }
+        }
+
+
+    }
+
 }

@@ -1,7 +1,9 @@
 package net.runelite.client.plugins.gauntlethelper;
 
 import net.runelite.api.Client;
+import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
+import net.runelite.api.NPC;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
