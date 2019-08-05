@@ -43,6 +43,9 @@ public class GauntletHelperOverlay extends Overlay {
         if (config.supplySpots()){
             renderSupplySpots(graphics);
         }
+        if (config.bossMonsters()){
+            renderMinibosses(graphics);
+        }
         return null;
     }
 
@@ -57,25 +60,9 @@ public class GauntletHelperOverlay extends Overlay {
             return;
         }
         NPC hunllef = client.getNpcs().stream().filter(npc -> (npc.getName() != null) && (npc.getName().contains("Hunllef"))).findFirst().get();
-        Polygon objectClickbox = hunllef.getConvexHull();
-        drawPolygon(graphics, objectClickbox, color);
+        renderActor(graphics,color,hunllef);
     }
 
-    private void renderObject(Graphics2D graphics, Color color, GameObject object){
-        Polygon objectClickbox = object.getConvexHull();
-        drawPolygon(graphics, objectClickbox, color);
-    }
-
-    private void drawPolygon(Graphics2D graphics, Polygon polygon, Color color){
-        if (polygon != null)
-        {
-            graphics.setColor(color);
-            graphics.setStroke(new BasicStroke(2));
-            graphics.draw(polygon);
-            graphics.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 20));
-            graphics.fill(polygon);
-        }
-    }
     private void renderSupplySpots(Graphics2D graphics){
         if (plugin.getSupplies().fish < config.num_fish()){
             for (GameObject spot: plugin.getFishing_spots().values()){
@@ -102,8 +89,40 @@ public class GauntletHelperOverlay extends Overlay {
                 renderObject(graphics, config.supplySpotsColor(), spot);
             }
         }
+    }
+
+    private void renderMinibosses(Graphics2D graphics){
+        for (NPC npc : plugin.getBosses()){
+            if (npc.getName().toLowerCase().contains("beast")){
+                renderActor(graphics, new Color(0,100,0), npc);
+            }else if (npc.getName().toLowerCase().contains("dragon")){
+                renderActor(graphics, Color.RED, npc);
+            }if (npc.getName().toLowerCase().contains("bear")){
+                renderActor(graphics, Color.BLUE, npc);
+            }
+        }
+    }
+
+    private void renderObject(Graphics2D graphics, Color color, GameObject object){
+        Polygon objectClickbox = object.getConvexHull();
+        drawPolygon(graphics, objectClickbox, color);
+    }
 
 
+    private void renderActor(Graphics2D graphics, Color color, Actor actor){
+        Polygon objectClickbox = actor.getConvexHull();
+        drawPolygon(graphics, objectClickbox, color);
+    }
+
+    private void drawPolygon(Graphics2D graphics, Polygon polygon, Color color){
+        if (polygon != null)
+        {
+            graphics.setColor(color);
+            graphics.setStroke(new BasicStroke(2));
+            graphics.draw(polygon);
+            graphics.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 20));
+            graphics.fill(polygon);
+        }
     }
 
 }
