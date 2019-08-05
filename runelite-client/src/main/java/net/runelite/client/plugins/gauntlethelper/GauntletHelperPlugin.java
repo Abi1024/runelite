@@ -9,15 +9,12 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.*;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
-
-import java.awt.*;
-import java.awt.geom.Area;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import static java.lang.Math.abs;
 import static net.runelite.api.AnimationID.IDLE;
@@ -43,37 +40,33 @@ public class GauntletHelperPlugin extends Plugin {
     private MinimapOverlay minimapOverlay;
 
     @Inject
-    private ItemManager manager;
-
-    @Inject
     private Client client;
 
     @Getter
     private GauntletSupplies supplies = new GauntletSupplies();
 
     @Getter
-    private HashMap<GameTile,GameObject> fishing_spots = new HashMap<GameTile,GameObject>();
+    private HashMap<GameTile,GameObject> fishing_spots = new HashMap<>();
 
     @Getter
-    private HashMap<GameTile,GameObject> mining_spots = new HashMap<GameTile,GameObject>();
+    private HashMap<GameTile,GameObject> mining_spots = new HashMap<>();
 
     @Getter
-    private HashMap<GameTile,GameObject> bark_spots = new HashMap<GameTile,GameObject>();
+    private HashMap<GameTile,GameObject> bark_spots = new HashMap<>();
 
     @Getter
-    private HashMap<GameTile,GameObject> linum_spots = new HashMap<GameTile,GameObject>();
+    private HashMap<GameTile,GameObject> linum_spots = new HashMap<>();
 
     @Getter
-    private HashMap<GameTile,GameObject> herb_spots = new HashMap<GameTile,GameObject>();
+    private HashMap<GameTile,GameObject> herb_spots = new HashMap<>();
+
+    @Getter
+    private HashSet<NPC> bosses = new HashSet<>();
 
     private Item[] items = null;
 
-    private Area main_area = new Area(new Rectangle(10930,8354,11,11));
-    private Area corrupted_area = new Area(new Rectangle(8242,8770,11,11));
-
     public boolean is_boss_using_range = true;
     private int num_boss_hits = 0;
-    private ItemContainer inventory;
 
     private GameObject tool_storage = null;
 
@@ -110,7 +103,6 @@ public class GauntletHelperPlugin extends Plugin {
             return;
         }
         if (animationChanged.getActor() == client.getLocalPlayer()){
-            //System.out.println("Player animation: " + animationChanged.getActor().getAnimation());
             return;
         }
         if (animationChanged.getActor().getName() != null){
@@ -128,8 +120,6 @@ public class GauntletHelperPlugin extends Plugin {
                     default:
                         break;
                 }
-                //System.out.println("Hunllef animation: " + animationChanged.getActor().getAnimation());
-                //System.out.println("Num_boss_hits: " + num_boss_hits);
             }
         }
     }
@@ -146,7 +136,6 @@ public class GauntletHelperPlugin extends Plugin {
         if (!isInGauntlet()){
             return;
         }
-        //System.out.println("item changed");
         if (items == null){
             if (event.getItemContainer() != null){
                 items = event.getItemContainer().getItems();
@@ -155,9 +144,6 @@ public class GauntletHelperPlugin extends Plugin {
         }
         Item[] new_items = event.getItemContainer().getItems();
         if (!isInMainRoom()){
-            //System.out.println("not in main room!");
-            //System.out.println("old supply: " + getAmountInventory(items,ItemID.CORRUPTED_ORE) );
-            //System.out.println("new supply: " + getAmountInventory(new_items,ItemID.CORRUPTED_ORE) );
             supplies.fish += getAmountDifference(new_items,items,ItemID.RAW_PADDLEFISH);
             supplies.ore += getAmountDifference(new_items,items,ItemID.CRYSTAL_ORE);
             supplies.ore += getAmountDifference(new_items,items,ItemID.CORRUPTED_ORE);
@@ -175,9 +161,7 @@ public class GauntletHelperPlugin extends Plugin {
             supplies.weapons += getAmountDifference(new_items,items,ItemID.WEAPON_FRAME);
             supplies.weapons += getAmountDifference(new_items,items,ItemID.WEAPON_FRAME_23871);
         }
-        //System.out.println("Ore supply: " + supplies.ore);
         items = new_items;
-        //System.out.println("Inventory supply: " + getAmountInventory(items,ItemID.CORRUPTED_ORE));
     }
 
     @Subscribe
@@ -256,23 +240,25 @@ public class GauntletHelperPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onGameTick(GameTick tick){
+    public void onNpcSpawned(NpcSpawned event){
         if (!isInGauntlet()){
             return;
         }
+        NPC npc = event.getNpc();
+        if (npc.getName().toLowerCase().contains("beast") ||
+            npc.getName().toLowerCase().contains("dragon") ||
+            npc.getName().toLowerCase().contains("bear")) {
+            bosses.add(npc);
+        }
     }
 
-    private void resetPlugin(){
-        num_boss_hits = 0;
-        is_boss_using_range = true;
-        tool_storage = null;
-        fishing_spots.clear();
-        mining_spots.clear();
-        bark_spots.clear();
-        linum_spots.clear();
-        herb_spots.clear();
-        supplies = new GauntletSupplies();
-        items = null;
+    @Subscribe
+    public void onNpcDespawned(NpcDespawned event){
+        if (!isInGauntlet()){
+            return;
+        }
+        NPC npc = event.getNpc();
+        bosses.remove(npc);
     }
 
     private int supNorm(WorldPoint w1, WorldPoint w2){
@@ -292,7 +278,7 @@ public class GauntletHelperPlugin extends Plugin {
         return false;
     }
 
-    public boolean isInGauntlet(){
+    boolean isInGauntlet(){
         if (client.getMapRegions() != null){
             if (client.getMapRegions().length > 0){
                 switch (client.getMapRegions()[0]){
@@ -307,22 +293,17 @@ public class GauntletHelperPlugin extends Plugin {
         return false;
     }
 
-    public boolean isInCorruptedGauntlet(){
+    boolean isInCorruptedGauntlet(){
         if (client.getMapRegions() != null){
             if (client.getMapRegions().length > 0){
-                switch (client.getMapRegions()[0]){
-                    case 7768:
-                        return true;
-                    default:
-                        break;
-                }
+                return client.getMapRegions()[0] == 7768;
             }
         }
         return false;
     }
 
     private int getAmountInventory(Item[] items, int itemID){
-        int count =  0;
+        int count = 0;
         for (Item item : items){
             if (item.getId() == itemID){
                 count += item.getQuantity();
@@ -335,11 +316,19 @@ public class GauntletHelperPlugin extends Plugin {
         return getAmountInventory(new_items,itemID)-getAmountInventory(old_items,itemID);
     }
 
-    private String printLocation(WorldPoint w){
-        return (w.getX() + " " + w.getY());
+    private void resetPlugin(){
+        num_boss_hits = 0;
+        is_boss_using_range = true;
+        tool_storage = null;
+        fishing_spots.clear();
+        mining_spots.clear();
+        bark_spots.clear();
+        linum_spots.clear();
+        herb_spots.clear();
+        bosses.clear();
+        supplies = new GauntletSupplies();
+        items = null;
     }
-
-
 
 
 }
