@@ -3,6 +3,7 @@ package net.runelite.client.plugins.gauntlethelper;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import java.awt.Color;
 
 @ConfigGroup("gauntlethelper")
 public interface GauntletHelperConfig extends Config {
@@ -30,11 +31,33 @@ public interface GauntletHelperConfig extends Config {
 
     @ConfigItem(
             keyName = "supplySpots",
-            name = "Show supply spots",
+            name = "Highlight supply spots",
             description = "If set, this option higlights in game objects that yield supplies you need to collect.",
             position = 3
     )
     default boolean supplySpots()
+    {
+        return true;
+    }
+
+    @ConfigItem(
+            keyName = "supplySpotsColor",
+            name = "Supply spots color",
+            description = "Sets the color of supply spots.",
+            position = 4
+    )
+    default Color supplySpotsColor()
+    {
+        return Color.GREEN;
+    }
+
+    @ConfigItem(
+            keyName = "minimapOverlay",
+            name = "Minimap overlay",
+            description = "Configures whether or not to show the minimap overlay.",
+            position = 4
+    )
+    default boolean minimapOverlay()
     {
         return true;
     }
@@ -51,15 +74,38 @@ public interface GauntletHelperConfig extends Config {
     }
 
     @ConfigItem(
-            keyName = "trackHitpoints",
-            name = "Track hitpoints",
-            description = "If set, this option takes into account your current HP to determine how much more fish you need.",
+            keyName = "bossMonsters",
+            name = "Higlight boss monsters",
+            description = "Highlights the three boss monsters.",
             position = 4
     )
-    default boolean trackHitpoints()
+    default boolean bossMonsters()
     {
         return true;
     }
+
+    @ConfigItem(
+            keyName = "highlightMonsters",
+            name = "Highlight non-boss monsters",
+            description = "If there are weapon frames or shards left to be collected, this will higlight non-boss monsters.",
+            position = 4
+    )
+    default boolean highlightMonsters()
+    {
+        return true;
+    }
+
+    @ConfigItem(
+            keyName = "monstersColor",
+            name = "Highlight monsters color",
+            description = "Sets the color with which to higlight monsters.",
+            position = 4
+    )
+    default Color monstersColor()
+    {
+        return Color.CYAN;
+    }
+
 
     @ConfigItem(
             keyName = "armorResources",

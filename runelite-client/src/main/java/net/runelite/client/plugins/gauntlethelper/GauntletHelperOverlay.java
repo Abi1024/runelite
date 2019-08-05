@@ -37,19 +37,16 @@ public class GauntletHelperOverlay extends Overlay {
         if (!plugin.isInGauntlet()){
             return null;
         }
-
         if (config.showBossStyle()){
             renderBoss(graphics);
         }
         if (config.supplySpots()){
             renderSupplySpots(graphics);
         }
-
         return null;
-
     }
 
-    public void renderBoss(Graphics2D graphics){
+    private void renderBoss(Graphics2D graphics){
         Color color = null;
         if (plugin.is_boss_using_range){
             color = new Color(0,255,0);
@@ -64,12 +61,12 @@ public class GauntletHelperOverlay extends Overlay {
         drawPolygon(graphics, objectClickbox, color);
     }
 
-    public void renderObject(Graphics2D graphics, Color color, GameObject object){
+    private void renderObject(Graphics2D graphics, Color color, GameObject object){
         Polygon objectClickbox = object.getConvexHull();
         drawPolygon(graphics, objectClickbox, color);
     }
 
-    public void drawPolygon(Graphics2D graphics, Polygon polygon, Color color){
+    private void drawPolygon(Graphics2D graphics, Polygon polygon, Color color){
         if (polygon != null)
         {
             graphics.setColor(color);
@@ -79,30 +76,30 @@ public class GauntletHelperOverlay extends Overlay {
             graphics.fill(polygon);
         }
     }
-    public void renderSupplySpots(Graphics2D graphics){
+    private void renderSupplySpots(Graphics2D graphics){
         if (plugin.getSupplies().fish < config.num_fish()){
             for (GameObject spot: plugin.getFishing_spots().values()){
-                renderObject(graphics, new Color(0,255,0),spot);
+                renderObject(graphics, config.supplySpotsColor(), spot);
             }
         }
         if (plugin.getSupplies().ore < config.num_resources()){
             for (GameObject spot: plugin.getMining_spots().values()){
-                renderObject(graphics, new Color(0,255,0),spot);
+                renderObject(graphics, config.supplySpotsColor(), spot);
             }
         }
         if (plugin.getSupplies().bark < config.num_resources()){
             for (GameObject spot: plugin.getBark_spots().values()){
-                renderObject(graphics, new Color(0,255,0),spot);
+                renderObject(graphics, config.supplySpotsColor(), spot);
             }
         }
         if (plugin.getSupplies().linum < config.num_resources()){
             for (GameObject spot: plugin.getLinum_spots().values()){
-                renderObject(graphics, new Color(0,255,0),spot);
+                renderObject(graphics, config.supplySpotsColor(), spot);
             }
         }
         if (plugin.getSupplies().herbs < config.num_herbs()){
             for (GameObject spot: plugin.getHerb_spots().values()){
-                renderObject(graphics, new Color(0,255,0),spot);
+                renderObject(graphics, config.supplySpotsColor(), spot);
             }
         }
 

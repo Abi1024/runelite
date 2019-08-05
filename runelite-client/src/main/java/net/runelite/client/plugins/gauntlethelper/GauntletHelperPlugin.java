@@ -40,6 +40,9 @@ public class GauntletHelperPlugin extends Plugin {
     private InfoBoxOverlay infoBoxOverlay;
 
     @Inject
+    private MinimapOverlay minimapOverlay;
+
+    @Inject
     private ItemManager manager;
 
     @Inject
@@ -79,6 +82,7 @@ public class GauntletHelperPlugin extends Plugin {
     {
         overlayManager.add(overlay);
         overlayManager.add(infoBoxOverlay);
+        overlayManager.add(minimapOverlay);
         resetPlugin();
     }
 
@@ -87,6 +91,7 @@ public class GauntletHelperPlugin extends Plugin {
     {
         overlayManager.remove(overlay);
         overlayManager.remove(infoBoxOverlay);
+        overlayManager.remove(minimapOverlay);
         resetPlugin();
     }
 
@@ -123,8 +128,8 @@ public class GauntletHelperPlugin extends Plugin {
                     default:
                         break;
                 }
-                System.out.println("Hunllef animation: " + animationChanged.getActor().getAnimation());
-                System.out.println("Num_boss_hits: " + num_boss_hits);
+                //System.out.println("Hunllef animation: " + animationChanged.getActor().getAnimation());
+                //System.out.println("Num_boss_hits: " + num_boss_hits);
             }
         }
     }
@@ -141,7 +146,7 @@ public class GauntletHelperPlugin extends Plugin {
         if (!isInGauntlet()){
             return;
         }
-        System.out.println("item changed");
+        //System.out.println("item changed");
         if (items == null){
             if (event.getItemContainer() != null){
                 items = event.getItemContainer().getItems();
@@ -150,9 +155,9 @@ public class GauntletHelperPlugin extends Plugin {
         }
         Item[] new_items = event.getItemContainer().getItems();
         if (!isInMainRoom()){
-            System.out.println("not in main room!");
-            System.out.println("old supply: " + getAmountInventory(items,ItemID.CORRUPTED_ORE) );
-            System.out.println("new supply: " + getAmountInventory(new_items,ItemID.CORRUPTED_ORE) );
+            //System.out.println("not in main room!");
+            //System.out.println("old supply: " + getAmountInventory(items,ItemID.CORRUPTED_ORE) );
+            //System.out.println("new supply: " + getAmountInventory(new_items,ItemID.CORRUPTED_ORE) );
             supplies.fish += getAmountDifference(new_items,items,ItemID.RAW_PADDLEFISH);
             supplies.ore += getAmountDifference(new_items,items,ItemID.CRYSTAL_ORE);
             supplies.ore += getAmountDifference(new_items,items,ItemID.CORRUPTED_ORE);
@@ -162,14 +167,17 @@ public class GauntletHelperPlugin extends Plugin {
             supplies.linum += getAmountDifference(new_items,items,ItemID.LINUM_TIRINUM_23876);
             supplies.herbs += getAmountDifference(new_items,items,ItemID.GRYM_LEAF);
             supplies.herbs += getAmountDifference(new_items,items,ItemID.GRYM_LEAF_23875);
+            if (getAmountDifference(new_items,items,ItemID.EGNIOL_POTION_3) > 0){
+                supplies.herbs += getAmountDifference(new_items,items,ItemID.EGNIOL_POTION_3);
+            }
             supplies.shards += getAmountDifference(new_items,items,ItemID.CRYSTAL_SHARDS);
             supplies.shards += getAmountDifference(new_items,items,ItemID.CORRUPTED_SHARDS);
             supplies.weapons += getAmountDifference(new_items,items,ItemID.WEAPON_FRAME);
             supplies.weapons += getAmountDifference(new_items,items,ItemID.WEAPON_FRAME_23871);
         }
-        System.out.println("Ore supply: " + supplies.ore);
+        //System.out.println("Ore supply: " + supplies.ore);
         items = new_items;
-        System.out.println("Inventory supply: " + getAmountInventory(items,ItemID.CORRUPTED_ORE));
+        //System.out.println("Inventory supply: " + getAmountInventory(items,ItemID.CORRUPTED_ORE));
     }
 
     @Subscribe
@@ -246,7 +254,6 @@ public class GauntletHelperPlugin extends Plugin {
                 break;
         }
     }
-
 
     @Subscribe
     public void onGameTick(GameTick tick){
