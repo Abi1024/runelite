@@ -153,8 +153,8 @@ public class GauntletHelperPlugin extends Plugin {
             supplies.linum += getAmountDifference(new_items,items,ItemID.LINUM_TIRINUM_23876);
             supplies.herbs += getAmountDifference(new_items,items,ItemID.GRYM_LEAF);
             supplies.herbs += getAmountDifference(new_items,items,ItemID.GRYM_LEAF_23875);
-            if (getAmountDifference(new_items,items,ItemID.EGNIOL_POTION_3) > 0){
-                supplies.herbs += getAmountDifference(new_items,items,ItemID.EGNIOL_POTION_3);
+            if (getAmountDifference(new_items,items,ItemID.GRYM_POTION_UNF) > 0){
+                supplies.herbs += getAmountDifference(new_items,items,ItemID.GRYM_POTION_UNF);
             }
             supplies.shards += getAmountDifference(new_items,items,ItemID.CRYSTAL_SHARDS);
             supplies.shards += getAmountDifference(new_items,items,ItemID.CORRUPTED_SHARDS);
@@ -196,7 +196,6 @@ public class GauntletHelperPlugin extends Plugin {
             case ObjectID.GRYM_ROOT_36070:
                 herb_spots.put(new GameTile(event.getGameObject().getWorldLocation()),event.getGameObject());
                 break;
-
             default:
                 break;
         }
