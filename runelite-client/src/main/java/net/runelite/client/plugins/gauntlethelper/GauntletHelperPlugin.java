@@ -13,8 +13,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 import static java.lang.Math.abs;
 import static net.runelite.api.AnimationID.IDLE;
@@ -27,6 +26,13 @@ import static net.runelite.api.AnimationID.IDLE;
 )
 
 public class GauntletHelperPlugin extends Plugin {
+    private static final Set<Integer> ResourceIDs = new HashSet<>(Arrays.asList(ObjectID.CRYSTAL_DEPOSIT, ObjectID.CORRUPT_DEPOSIT, ObjectID.PHREN_ROOTS,
+            ObjectID.PHREN_ROOTS_36066, ObjectID.FISHING_SPOT_36068, ObjectID.FISHING_SPOT_35971, ObjectID.GRYM_ROOT, ObjectID.GRYM_ROOT_36070,
+            ObjectID.LINUM_TIRINUM, ObjectID.LINUM_TIRINUM_36072));
+
+    @Getter
+    private Set<GameObject> resource_spots = new HashSet<>();
+
     @Inject
     private OverlayManager overlayManager;
 
@@ -39,26 +45,13 @@ public class GauntletHelperPlugin extends Plugin {
     @Inject
     private MinimapOverlay minimapOverlay;
 
+    private int counter = 0;
+
     @Inject
     private Client client;
 
     @Getter
     private GauntletSupplies supplies = new GauntletSupplies();
-
-    @Getter
-    private HashMap<GameTile,GameObject> fishing_spots = new HashMap<>();
-
-    @Getter
-    private HashMap<GameTile,GameObject> mining_spots = new HashMap<>();
-
-    @Getter
-    private HashMap<GameTile,GameObject> bark_spots = new HashMap<>();
-
-    @Getter
-    private HashMap<GameTile,GameObject> linum_spots = new HashMap<>();
-
-    @Getter
-    private HashMap<GameTile,GameObject> herb_spots = new HashMap<>();
 
     @Getter
     private HashSet<NPC> bosses = new HashSet<>();
@@ -170,34 +163,33 @@ public class GauntletHelperPlugin extends Plugin {
         if (!isInGauntlet()){
             return;
         }
-        GameObject gameObject = event.getGameObject();
-        switch (gameObject.getId()){
-            case ObjectID.TOOL_STORAGE:
-            case ObjectID.TOOL_STORAGE_36074:
-                tool_storage = gameObject;
-                break;
-            case ObjectID.FISHING_SPOT_36068:
-            case ObjectID.FISHING_SPOT_35971:
-                fishing_spots.put(new GameTile(event.getGameObject().getWorldLocation()),event.getGameObject());
-                break;
-            case ObjectID.CRYSTAL_DEPOSIT:
-            case ObjectID.CORRUPT_DEPOSIT:
-                mining_spots.put(new GameTile(event.getGameObject().getWorldLocation()),event.getGameObject());
-                break;
-            case ObjectID.LINUM_TIRINUM:
-            case ObjectID.LINUM_TIRINUM_36072:
-                linum_spots.put(new GameTile(event.getGameObject().getWorldLocation()),event.getGameObject());
-                break;
-            case ObjectID.PHREN_ROOTS:
-            case ObjectID.PHREN_ROOTS_36066:
-                bark_spots.put(new GameTile(event.getGameObject().getWorldLocation()),event.getGameObject());
-                break;
-            case ObjectID.GRYM_ROOT:
-            case ObjectID.GRYM_ROOT_36070:
-                herb_spots.put(new GameTile(event.getGameObject().getWorldLocation()),event.getGameObject());
-                break;
-            default:
-                break;
+        final GameObject gameObject = event.getGameObject();
+        if (gameObject.getId() == ObjectID.TOOL_STORAGE || gameObject.getId() == ObjectID.TOOL_STORAGE_36074){
+            tool_storage = gameObject;
+            return;
+        }
+        if (ResourceIDs.contains(gameObject.getId())){
+            System.out.println("RESOURCE SPAWNED: " + client.getObjectDefinition(gameObject.getId()).getName() + " Tile: "
+            + gameObject.getWorldLocation().getX() + " " + gameObject.getWorldLocation().getY());
+            resource_spots.add(gameObject);
+        }
+    }
+
+    @Subscribe
+    public void onGameTick(GameTick tick){
+        if (!isInGauntlet()) {
+            return;
+        }
+        int count = 1;
+        counter++;
+        if (counter == 10){
+            counter = 0;
+            System.out.println("Resource spots size: " + resource_spots.size());
+            for (GameObject spot: resource_spots){
+                System.out.println("Spot " + count + ": " + client.getObjectDefinition(spot.getId()).getName() + " Tile: " +
+                        spot.getWorldLocation().getX() + " " + spot.getWorldLocation().getY());
+                count++;
+            }
         }
     }
 
@@ -207,34 +199,15 @@ public class GauntletHelperPlugin extends Plugin {
         if (!isInGauntlet()){
             return;
         }
-        GameObject gameObject = event.getGameObject();
-        switch (gameObject.getId()){
-            case ObjectID.TOOL_STORAGE:
-            case ObjectID.TOOL_STORAGE_36074:
-                tool_storage = null;
-                break;
-            case ObjectID.FISHING_SPOT_36068:
-            case ObjectID.FISHING_SPOT_35971:
-                fishing_spots.remove(new GameTile(event.getGameObject().getWorldLocation()));
-                break;
-            case ObjectID.CRYSTAL_DEPOSIT:
-            case ObjectID.CORRUPT_DEPOSIT:
-                mining_spots.remove(new GameTile(event.getGameObject().getWorldLocation()));
-                break;
-            case ObjectID.LINUM_TIRINUM:
-            case ObjectID.LINUM_TIRINUM_36072:
-                linum_spots.remove(new GameTile(event.getGameObject().getWorldLocation()));
-                break;
-            case ObjectID.PHREN_ROOTS:
-            case ObjectID.PHREN_ROOTS_36066:
-                bark_spots.remove(new GameTile(event.getGameObject().getWorldLocation()));
-                break;
-            case ObjectID.GRYM_ROOT:
-            case ObjectID.GRYM_ROOT_36070:
-                herb_spots.remove(new GameTile(event.getGameObject().getWorldLocation()));
-                break;
-            default:
-                break;
+        final GameObject gameObject = event.getGameObject();
+        if (gameObject.getId() == ObjectID.TOOL_STORAGE || gameObject.getId() == ObjectID.TOOL_STORAGE_36074){
+            tool_storage = null;
+            return;
+        }
+        if (ResourceIDs.contains(gameObject.getId())){
+            System.out.println("RESOURCE DISAPPEARED: " + client.getObjectDefinition(gameObject.getId()).getName() + " Tile: "
+                    + gameObject.getWorldLocation().getX() + " " + gameObject.getWorldLocation().getY());
+            resource_spots.removeIf(object -> object == gameObject);
         }
     }
 
@@ -319,11 +292,7 @@ public class GauntletHelperPlugin extends Plugin {
         num_boss_hits = 0;
         is_boss_using_range = true;
         tool_storage = null;
-        fishing_spots.clear();
-        mining_spots.clear();
-        bark_spots.clear();
-        linum_spots.clear();
-        herb_spots.clear();
+        resource_spots.clear();
         bosses.clear();
         supplies = new GauntletSupplies();
         items = null;
