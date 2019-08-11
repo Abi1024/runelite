@@ -1,6 +1,8 @@
 package net.runelite.client.plugins.gauntlethelper;
 
 import net.runelite.api.*;
+import net.runelite.api.Point;
+import net.runelite.api.coords.LocalPoint;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.overlay.Overlay;
 
@@ -9,6 +11,7 @@ import java.awt.*;
 
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.ui.overlay.OverlayUtil;
 
 public class GauntletHelperOverlay extends Overlay {
     private final GauntletHelperConfig config;
@@ -46,6 +49,12 @@ public class GauntletHelperOverlay extends Overlay {
         if (config.bossMonsters()){
             renderMinibosses(graphics);
         }
+        if (config.highlightMonsters()){
+            renderMonsters(graphics);
+        }
+        if (config.showTornados()){
+            renderTornados(graphics);
+        }
         return null;
     }
 
@@ -64,7 +73,7 @@ public class GauntletHelperOverlay extends Overlay {
     }
 
     private void renderSupplySpots(Graphics2D graphics){
-        for (GameObject spot: plugin.getResource_spots()){
+        for (GameObject spot : plugin.getResource_spots().values()){
             switch (spot.getId()){
                 case ObjectID.FISHING_SPOT_36068:
                 case ObjectID.FISHING_SPOT_35971:
@@ -113,6 +122,44 @@ public class GauntletHelperOverlay extends Overlay {
             }if (npc.getName().toLowerCase().contains("bear")){
                 renderActor(graphics, Color.BLUE, npc);
             }
+        }
+    }
+
+    private void renderMonsters(Graphics2D graphics){
+        for (NPC npc : plugin.getMonsters()){
+            renderActor(graphics, config.monstersColor(), npc);
+        }
+    }
+
+    private void renderTornados(Graphics2D graphics){
+        for (Tornado tornado : plugin.getTornados()){
+            if (tornado.getTimeLeft() <= 0)
+            {
+                return;
+            }
+            final String textOverlay = Integer.toString(tornado.getTimeLeft());
+            final Point textLoc = Perspective.getCanvasTextLocation(client, graphics, tornado.getNpc().getLocalLocation(), textOverlay, 0);
+            final LocalPoint lp = LocalPoint.fromWorld(client, tornado.getNpc().getWorldLocation());
+            if (lp == null)
+            {
+                return;
+            }
+
+            final Polygon tilePoly = Perspective.getCanvasTilePoly(client, lp);
+            OverlayUtil.renderPolygon(graphics, tilePoly, Color.YELLOW);
+
+            if (textLoc == null)
+            {
+                return;
+            }
+
+            Font oldFont = graphics.getFont();
+            graphics.setFont(new Font("Courier", Font.BOLD, 14));
+            Point pointShadow = new Point(textLoc.getX() + 1, textLoc.getY() + 1);
+            OverlayUtil.renderTextLocation(graphics, pointShadow, textOverlay, Color.BLACK);
+            OverlayUtil.renderTextLocation(graphics, textLoc, textOverlay, Color.YELLOW);
+            graphics.setFont(oldFont);
+
         }
     }
 

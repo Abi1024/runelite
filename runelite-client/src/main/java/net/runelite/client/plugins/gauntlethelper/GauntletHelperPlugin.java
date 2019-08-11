@@ -31,7 +31,13 @@ public class GauntletHelperPlugin extends Plugin {
             ObjectID.LINUM_TIRINUM, ObjectID.LINUM_TIRINUM_36072));
 
     @Getter
-    private Set<GameObject> resource_spots = new HashSet<>();
+    private HashMap<GameTile, GameObject> resource_spots = new HashMap<>();
+
+    @Getter
+    private HashSet<NPC> monsters = new HashSet<>();
+
+    @Getter
+    private HashSet<Tornado> tornados = new HashSet<>();
 
     @Inject
     private OverlayManager overlayManager;
@@ -44,8 +50,6 @@ public class GauntletHelperPlugin extends Plugin {
 
     @Inject
     private MinimapOverlay minimapOverlay;
-
-    private int counter = 0;
 
     @Inject
     private Client client;
@@ -169,27 +173,7 @@ public class GauntletHelperPlugin extends Plugin {
             return;
         }
         if (ResourceIDs.contains(gameObject.getId())){
-            System.out.println("RESOURCE SPAWNED: " + client.getObjectDefinition(gameObject.getId()).getName() + " Tile: "
-            + gameObject.getWorldLocation().getX() + " " + gameObject.getWorldLocation().getY());
-            resource_spots.add(gameObject);
-        }
-    }
-
-    @Subscribe
-    public void onGameTick(GameTick tick){
-        if (!isInGauntlet()) {
-            return;
-        }
-        int count = 1;
-        counter++;
-        if (counter == 10){
-            counter = 0;
-            System.out.println("Resource spots size: " + resource_spots.size());
-            for (GameObject spot: resource_spots){
-                System.out.println("Spot " + count + ": " + client.getObjectDefinition(spot.getId()).getName() + " Tile: " +
-                        spot.getWorldLocation().getX() + " " + spot.getWorldLocation().getY());
-                count++;
-            }
+           resource_spots.put(new GameTile(event.getTile().getWorldLocation()),gameObject);
         }
     }
 
@@ -204,11 +188,7 @@ public class GauntletHelperPlugin extends Plugin {
             tool_storage = null;
             return;
         }
-        if (ResourceIDs.contains(gameObject.getId())){
-            System.out.println("RESOURCE DISAPPEARED: " + client.getObjectDefinition(gameObject.getId()).getName() + " Tile: "
-                    + gameObject.getWorldLocation().getX() + " " + gameObject.getWorldLocation().getY());
-            resource_spots.removeIf(object -> object == gameObject);
-        }
+        resource_spots.remove(new GameTile(event.getTile().getWorldLocation()));
     }
 
     @Subscribe
@@ -217,10 +197,19 @@ public class GauntletHelperPlugin extends Plugin {
             return;
         }
         NPC npc = event.getNpc();
-        if (npc.getName().toLowerCase().contains("beast") ||
+        //System.out.println("NPC spawned " + npc.getName());
+        if (npc.getId() == 9025 || npc.getId() == 9039){
+            tornados.add(new Tornado(npc));
+        }
+        else if (npc.getName().toLowerCase().contains("beast") ||
             npc.getName().toLowerCase().contains("dragon") ||
             npc.getName().toLowerCase().contains("bear")) {
             bosses.add(npc);
+        }else if (npc.getName().toLowerCase().contains("crystal")||
+                npc.getName().toLowerCase().contains("corrupt")){
+            if (!npc.getName().toLowerCase().contains("hunllef")){
+                monsters.add(npc);
+            }
         }
     }
 
@@ -230,8 +219,22 @@ public class GauntletHelperPlugin extends Plugin {
             return;
         }
         NPC npc = event.getNpc();
+        //System.out.println("NPC DEspawned " + npc.getName());
+        tornados.remove(npc);
         bosses.remove(npc);
+        monsters.remove(npc);
     }
+
+    @Subscribe
+    public void onGameTick(GameTick tick){
+        if (!isInGauntlet()) {
+            return;
+        }
+        for (Tornado tornado : tornados){
+            tornado.updateTimeLeft();
+        }
+    }
+
 
     private int supNorm(WorldPoint w1, WorldPoint w2){
         int x = abs(w1.getX()-w2.getX());
@@ -294,6 +297,7 @@ public class GauntletHelperPlugin extends Plugin {
         tool_storage = null;
         resource_spots.clear();
         bosses.clear();
+        monsters.clear();
         supplies = new GauntletSupplies();
         items = null;
     }

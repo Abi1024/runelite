@@ -38,11 +38,14 @@ public class MinimapOverlay extends Overlay {
         if (config.bossMonsters()){
             renderMinibosses(graphics);
         }
+        if (config.highlightMonsters()){
+            renderMonsters(graphics);
+        }
         return null;
     }
 
     private void renderSupplySpots(Graphics2D graphics){
-        for (GameObject spot: plugin.getResource_spots()){
+        for (GameObject spot : plugin.getResource_spots().values()){
             switch (spot.getId()){
                 case ObjectID.FISHING_SPOT_36068:
                 case ObjectID.FISHING_SPOT_35971:
@@ -92,6 +95,12 @@ public class MinimapOverlay extends Overlay {
         }
     }
 
+    private void renderMonsters(Graphics2D graphics){
+        for (NPC npc : plugin.getMonsters()){
+            renderMinimapActor(graphics, config.monstersColor(), npc);
+        }
+    }
+
     private void renderMinimapObject(Graphics2D graphics, Color color, GameObject object){
         Point minimapLocation = object.getMinimapLocation();
         if (minimapLocation != null)
@@ -107,6 +116,8 @@ public class MinimapOverlay extends Overlay {
             OverlayUtil.renderMinimapLocation(graphics, minimapLocation, color);
         }
     }
+
+
 
 
 

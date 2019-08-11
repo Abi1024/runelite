@@ -106,6 +106,14 @@ public interface GauntletHelperConfig extends Config {
         return Color.CYAN;
     }
 
+    @ConfigItem(
+            keyName = "tornados",
+            name = "Higlight tornados",
+            description = "Configures whether tornados should be highlighted and how long they last.",
+            position = 4
+    )
+    default boolean showTornados(){ return true;}
+
 
     @ConfigItem(
             keyName = "armorResources",
