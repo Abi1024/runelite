@@ -55,12 +55,15 @@ public class GauntletHelperOverlay extends Overlay {
         if (config.showTornados()){
             renderTornados(graphics);
         }
+        if (config.showPlayerSwitch()){
+            renderPlayerAttacks(graphics);
+        }
         return null;
     }
 
     private void renderBoss(Graphics2D graphics){
         Color color = null;
-        if (plugin.is_boss_using_range){
+        if (plugin.is_boss_using_range()){
             color = new Color(0,255,0);
         }else {
             color = new Color(255, 0, 0);
@@ -160,6 +163,45 @@ public class GauntletHelperOverlay extends Overlay {
             OverlayUtil.renderTextLocation(graphics, textLoc, textOverlay, Color.YELLOW);
             graphics.setFont(oldFont);
 
+        }
+    }
+
+    private void renderPlayerAttacks(Graphics2D graphics){
+        if (!client.getNpcs().stream().filter(npc -> (npc.getName() != null) && (npc.getName().contains("Hunllef"))).findFirst().isPresent()){
+            return;
+        }
+        NPC hunllef = client.getNpcs().stream().filter(npc -> (npc.getName() != null) && (npc.getName().contains("Hunllef"))).findFirst().get();
+        String textOverlay;
+        textOverlay = Integer.toString(4-plugin.getNum_boss_hits());
+        if (textOverlay.length() > 0)
+        {
+            textOverlay += " | ";
+        }
+        textOverlay += Integer.toString(6-plugin.getNum_player_hits());
+
+        if (textOverlay.length() > 0)
+        {
+            Point textLoc = Perspective.getCanvasTextLocation(client, graphics, hunllef.getLocalLocation(), textOverlay, hunllef.getLogicalHeight() / 2);
+
+            if (textLoc == null)
+            {
+                return;
+            }
+
+            textLoc = new Point(textLoc.getX(), textLoc.getY() + 35);
+
+            Font oldFont = graphics.getFont();
+
+            graphics.setFont(new Font("Arial", Font.BOLD, 20));
+            Point pointShadow = new Point(textLoc.getX() + 1, textLoc.getY() + 1);
+
+            OverlayUtil.renderTextLocation(graphics, pointShadow, textOverlay, Color.BLACK);
+            if (plugin.getNum_player_hits() == 5){
+                OverlayUtil.renderTextLocation(graphics, textLoc, textOverlay, Color.RED);
+            }else{
+                OverlayUtil.renderTextLocation(graphics, textLoc, textOverlay, Color.WHITE);
+            }
+            graphics.setFont(oldFont);
         }
     }
 

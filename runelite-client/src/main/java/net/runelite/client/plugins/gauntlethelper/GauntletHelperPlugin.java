@@ -2,6 +2,7 @@
 
 package net.runelite.client.plugins.gauntlethelper;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import lombok.Getter;
 import net.runelite.api.*;
@@ -26,6 +27,10 @@ import static net.runelite.api.AnimationID.IDLE;
 )
 
 public class GauntletHelperPlugin extends Plugin {
+    private static final int BOW_ATTACK = 426;
+    private static final int STAFF_ATTACK = 1167;
+    private static final Set<Integer> MELEE_ANIMATIONS = ImmutableSet.of(395, 401, 400, 401, 386, 390, 422, 423, 401, 428, 440);
+    private static final Set<Integer> PLAYER_ANIMATIONS = ImmutableSet.of(395, 401, 400, 401, 386, 390, 422, 423, 401, 428, 440, 426, 1167);
     private static final Set<Integer> ResourceIDs = new HashSet<>(Arrays.asList(ObjectID.CRYSTAL_DEPOSIT, ObjectID.CORRUPT_DEPOSIT, ObjectID.PHREN_ROOTS,
             ObjectID.PHREN_ROOTS_36066, ObjectID.FISHING_SPOT_36068, ObjectID.FISHING_SPOT_35971, ObjectID.GRYM_ROOT, ObjectID.GRYM_ROOT_36070,
             ObjectID.LINUM_TIRINUM, ObjectID.LINUM_TIRINUM_36072));
@@ -62,8 +67,14 @@ public class GauntletHelperPlugin extends Plugin {
 
     private Item[] items = null;
 
-    public boolean is_boss_using_range = true;
+    @Getter
+    private boolean is_boss_using_range = true;
+
+    @Getter
     private int num_boss_hits = 0;
+
+    @Getter
+    private int num_player_hits = 0;
 
     private GameObject tool_storage = null;
 
@@ -100,7 +111,38 @@ public class GauntletHelperPlugin extends Plugin {
             return;
         }
         if (animationChanged.getActor() == client.getLocalPlayer()){
-            return;
+            if (animationChanged.getActor().getInteracting() != null){
+                if (animationChanged.getActor().getInteracting() instanceof NPC){
+                    NPC boss = (NPC)animationChanged.getActor().getInteracting();
+                    if (boss.getName() != null){
+                        if (boss.getName().toLowerCase().contains("hunllef")){
+                            int animation = animationChanged.getActor().getAnimation();
+                            if (!PLAYER_ANIMATIONS.contains(animation)){
+                                return;
+                            }
+                            switch(client.getNpcDefinition(boss.getId()).getOverheadIcon()){
+                                case MAGIC:
+                                    if (animation != STAFF_ATTACK){
+                                        offprayerHit();
+                                    }
+                                    break;
+                                case MELEE:
+                                    if (!MELEE_ANIMATIONS.contains(animation)){
+                                        offprayerHit();
+                                    }
+                                    break;
+                                case RANGED:
+                                    if (animation != BOW_ATTACK){
+                                        offprayerHit();
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
         }
         if (animationChanged.getActor().getName() != null){
             if (animationChanged.getActor().getName().contains("Hunllef")){
@@ -293,6 +335,7 @@ public class GauntletHelperPlugin extends Plugin {
 
     private void resetPlugin(){
         num_boss_hits = 0;
+        num_player_hits = 0;
         is_boss_using_range = true;
         tool_storage = null;
         resource_spots.clear();
@@ -300,6 +343,13 @@ public class GauntletHelperPlugin extends Plugin {
         monsters.clear();
         supplies = new GauntletSupplies();
         items = null;
+    }
+
+    private void offprayerHit(){
+        num_player_hits++;
+        if (num_player_hits == 6){
+            num_player_hits = 0;
+        }
     }
 
 
