@@ -435,7 +435,7 @@ public class SuppliesTrackerPlugin extends Plugin
 					case 1978:
 					case 69:
 					case 4652:
-
+					case 1581:
 						ItemContainer container = client.getItemContainer(InventoryID.EQUIPMENT);
 						if (container.getItems().length > EquipmentInventorySlot.GLOVES.getSlotIdx()){
 							if (container.getItems()[EquipmentInventorySlot.GLOVES.getSlotIdx()].getId() == BRACELET_OF_ETHEREUM){
