@@ -81,6 +81,24 @@ public enum WorldType
 		PVP
 	);
 
+	private static final EnumSet<WorldType> ALL_PVP_WORLD_TYPES = EnumSet.of(
+			HIGH_RISK,
+			DEADMAN,
+			DEADMAN_TOURNAMENT,
+			PVP,
+			SEASONAL_DEADMAN
+	);
+
+	private static final EnumSet<WorldType> ALL_PK_WORLD_TYPES = EnumSet.of(
+			HIGH_RISK,
+			DEADMAN,
+			DEADMAN_TOURNAMENT,
+			PVP,
+			SEASONAL_DEADMAN,
+			BOUNTY
+	);
+
+
 	/**
 	 * Create enum set of world types from mask.
 	 *
@@ -130,5 +148,10 @@ public enum WorldType
 	public static boolean isPvpWorld(final Collection<WorldType> worldTypes)
 	{
 		return worldTypes.stream().anyMatch(PVP_WORLD_TYPES::contains);
+	}
+
+	public static boolean isAllPvpWorld(final Collection<WorldType> worldTypes)
+	{
+		return worldTypes.stream().anyMatch(ALL_PVP_WORLD_TYPES::contains);
 	}
 }
