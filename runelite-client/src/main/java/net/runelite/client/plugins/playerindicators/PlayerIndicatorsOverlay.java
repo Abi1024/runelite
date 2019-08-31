@@ -254,6 +254,7 @@ public class PlayerIndicatorsOverlay extends Overlay
 								textLocation.getY() - height),
 							ImageUtil.resizeImage(agilityIcon, height, height));
 					}
+					/*
 					if (level < plugin.getAgilityFirstThreshold())
 					{
 						OverlayUtil.renderImageLocation(graphics,
@@ -261,6 +262,8 @@ public class PlayerIndicatorsOverlay extends Overlay
 								textLocation.getY() - height),
 							ImageUtil.resizeImage(noAgilityIcon, height, height));
 					}
+					*/
+
 				}
 				else
 				{
