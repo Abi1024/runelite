@@ -36,6 +36,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.regex.Matcher;
 
 @PluginDescriptor(
 	name = "Freeze Timers",
@@ -193,6 +194,23 @@ public class FreezeTimersPlugin extends Plugin
             playerLocations.remove(actor);
         }
     }
+
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		if (event.getType() != ChatMessageType.SPAM && event.getType() != ChatMessageType.GAMEMESSAGE)
+		{
+			return;
+		}
+
+		if (event.getMessage().equals("removed")) {
+			if (event.getMessage().equals("killed")) {
+				System.out.println("You killed your teleblocker!");
+				timers.removeTimer(client.getLocalPlayer(),TimerType.TELEBLOCK);
+			}
+		}
+	}
+
 
 	public void clearLocation(Actor actor){
 	    playerLocations.remove(actor);
