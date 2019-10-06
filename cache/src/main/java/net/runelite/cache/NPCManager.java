@@ -32,7 +32,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -40,14 +39,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@Slf4j
 public class NPCManager
 {
 	private final ImmutableMap<Integer, NPCStats> statsMap;
-	private final Map<String, Integer> healthMap;
 
 	@Inject
-	private NPCManager(OkHttpClient okHttpClient, ScheduledExecutorService scheduledExecutorService)
+	private NPCManager()
 	{
 		final Gson gson = new Gson();
 
@@ -55,15 +52,9 @@ public class NPCManager
 		{
 		}.getType();
 
-		final Type typeToken2 = new TypeToken<Map<String, Integer>>()
-		{
-		}.getType();
-
 		final InputStream statsFile = getClass().getResourceAsStream("/npc_stats.json");
 		final Map<Integer, NPCStats> stats = gson.fromJson(new InputStreamReader(statsFile), typeToken);
 		statsMap = ImmutableMap.copyOf(stats);
-		final InputStream healthFile = getClass().getResourceAsStream("/npc_health.json");
-		healthMap = gson.fromJson(new InputStreamReader(healthFile), typeToken2);
 	}
 
 	/**
@@ -94,27 +85,6 @@ public class NPCManager
 
 		return s.getHitpoints();
 	}
-
-	@Nullable
-	public Integer getHealth(int npcId)
-	{
-		NpcInfo npcInfo = npcMap.get(npcId);
-		return npcInfo == null ? null : npcInfo.getHitpoints();
-	}
-
-	private void loadNpcs()
-	{
-		try
-		{
-			npcMap = new NpcInfoClient(okHttpClient).getNpcs();
-		}
-		catch (IOException e)
-		{
-			log.warn("error loading npc stats", e);
-		}
-	}
-
-
 
 	/**
 	 * Returns the attack speed for target NPC ID.

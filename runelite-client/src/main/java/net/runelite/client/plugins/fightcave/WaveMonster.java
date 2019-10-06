@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2018, Jordan Atwood <jordan.atwood423@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,55 +22,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.client.plugins.fightcave;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-/**
- * Client side only, content-developer integers
- *
- * VarCInts are stored entirely in memory, or locally on a user's
- * machine in the preferences2.dat file depending on how Jagex
- * configured the variable
- */
 @AllArgsConstructor
-@Getter
-public enum VarClientInt
+enum WaveMonster
 {
-	TOOLTIP_TIMEOUT(1),
+	TZ_KIH("Drainer", 22),
+	TZ_KEK("Blob", 45),
+	TOK_XIL("Range", 90),
+	YT_MEJKOT("Melee", 180),
+	KET_ZEK("Mage", 360),
+	TZKOK_JAD("Jad", 702);
 
-	/**
-	 * 0 = no tooltip displayed
-	 * 1 = tooltip displaying
-	 */
-	TOOLTIP_VISIBLE(2),
+	private final String name;
+	private final int level;
 
-	INPUT_TYPE(5),
-
-	MEMBERSHIP_STATUS(103),
-
-	/**
-	 *  0 = Combat
-	 *  1 = Stats
-	 *  2 = Quest
-	 *  3 = Inventory
-	 *  4 = Equipment
-	 *  5 = Prayer
-	 *  6 = Spellbook
-	 *  7 = Clan
-	 *  8 = Account Managment
-	 *  9 = Friends
-	 *  10 = Logout
-	 *  11 = Options
-	 *  12 = Emotes
-	 *  13 = Music
-	 */
-	PLAYER_INTERFACE_CONTAINER_OPENED(171),
-
-	INVENTORY_TAB(171),
-
-	WORLD_MAP_SEARCH_FOCUSED(190);
-
-	private final int index;
+	@Override
+	public String toString()
+	{
+		return String.format("%s - Level %s", name, level);
+	}
 }

@@ -25,21 +25,14 @@
 package net.runelite.client.ui.overlay;
 
 import com.google.common.base.Strings;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.Stroke;
-import java.awt.image.BufferedImage;
-import net.runelite.api.Actor;
-import net.runelite.api.Client;
-import net.runelite.api.Perspective;
+
+import java.awt.*;
 import net.runelite.api.Point;
-import net.runelite.api.TileObject;
+import java.awt.image.BufferedImage;
+import net.runelite.api.Prayer;
+import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.widgets.Widget;
 
 
 /**
@@ -95,6 +88,40 @@ public class OverlayUtil
 		graphics.setColor(color);
 		graphics.drawString(text, x, y);
 	}
+
+	public static void renderTextLocation(Graphics2D graphics, String txtString, int fontSize, int fontStyle, Color fontColor, Point canvasPoint, boolean shadows, int yOffset)
+	{
+		graphics.setFont(new Font("Arial", fontStyle, fontSize));
+		if (canvasPoint != null)
+		{
+			final Point canvasCenterPoint = new Point(
+					canvasPoint.getX(),
+					canvasPoint.getY() + yOffset);
+			final Point canvasCenterPoint_shadow = new Point(
+					canvasPoint.getX() + 1,
+					canvasPoint.getY() + 1);
+			if (shadows)
+			{
+				renderTextLocation(graphics, canvasCenterPoint_shadow, txtString, Color.BLACK);
+			}
+			renderTextLocation(graphics, canvasCenterPoint, txtString, fontColor);
+		}
+	}
+
+	public static Rectangle renderPrayerOverlay(Graphics2D graphics, Client client, Prayer prayer, Color color)
+	{
+		Widget widget = client.getWidget(prayer.getWidgetInfo());
+
+		if (widget == null || client.getVar(VarClientInt.PLAYER_INTERFACE_CONTAINER_OPENED) != 5)
+		{
+			return null;
+		}
+
+		Rectangle bounds = widget.getBounds();
+		renderPolygon(graphics, rectangleToPolygon(bounds), color);
+		return bounds;
+	}
+
 
 	public static void renderImageLocation(Client client, Graphics2D graphics, LocalPoint localPoint, BufferedImage image, int zOffset)
 	{
@@ -229,6 +256,15 @@ public class OverlayUtil
 
 		return result;
 	}
+
+	private static Polygon rectangleToPolygon(Rectangle rect)
+	{
+		int[] xpoints = {rect.x, rect.x + rect.width, rect.x + rect.width, rect.x};
+		int[] ypoints = {rect.y, rect.y, rect.y + rect.height, rect.y + rect.height};
+
+		return new Polygon(xpoints, ypoints, 4);
+	}
+
 
 	public static java.awt.Point transformPosition(OverlayPosition position, Dimension dimension)
 	{

@@ -166,9 +166,27 @@ public final class AnimationID
 	public static final int DRAGONFIRE_SHIELD_SPECIAL = 6696;
 
 	// NPC animations
-	public static final int TZTOK_JAD_MAGIC_ATTACK = 2656;
+	// NPC animations
 	public static final int TZTOK_JAD_RANGE_ATTACK = 2652;
+	public static final int TZTOK_JAD_MELEE_ATTACK = 2655;
+	public static final int TZTOK_JAD_MAGIC_ATTACK = 2656;
+	public static final int TOK_XIL_RANGE_ATTACK = 2633;
+	public static final int TOK_XIL_MELEE_ATTACK = 2628;
+	public static final int KET_ZEK_MELEE_ATTACK = 2644;
+	public static final int KET_ZEK_MAGE_ATTACK = 2647;
+	public static final int MEJ_KOT_MELEE_ATTACK = 2637;
+	public static final int MEJ_KOT_HEAL_ATTACK = 2639;
 	public static final int HELLHOUND_DEFENCE = 6566;
+	public static final int VORKATH_WAKE_UP = 7950;
+	public static final int VORKATH_DEATH = 7949;
+	public static final int VORKATH_SLASH_ATTACK = 7951;
+	public static final int VORKATH_ATTACK = 7952;
+	public static final int VORKATH_FIRE_BOMB_OR_SPAWN_ATTACK = 7960;
+	public static final int VORKATH_ACID_ATTACK = 7957;
+	public static final int BLACKJACK_KO = 838;
+	public static final int VETION_EARTHQUAKE = 5507;
+	public static final int ZULRAH_DEATH = 5804;
+	public static final int ZULRAH_PHASE = 5072;
 
 	// Farming
 	public static final int FARMING_HARVEST_FRUIT_TREE = 2280;

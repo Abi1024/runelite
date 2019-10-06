@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Adam <Adam@sigterm.info>
+ * Copyright (c) 2019, TheStonedTurtle <https://github.com/TheStonedTurtle>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,55 +22,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.api;
+package net.runelite.client.ui.overlay.components.table;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-/**
- * Client side only, content-developer integers
- *
- * VarCInts are stored entirely in memory, or locally on a user's
- * machine in the preferences2.dat file depending on how Jagex
- * configured the variable
- */
-@AllArgsConstructor
-@Getter
-public enum VarClientInt
+public enum TableAlignment
 {
-	TOOLTIP_TIMEOUT(1),
-
-	/**
-	 * 0 = no tooltip displayed
-	 * 1 = tooltip displaying
-	 */
-	TOOLTIP_VISIBLE(2),
-
-	INPUT_TYPE(5),
-
-	MEMBERSHIP_STATUS(103),
-
-	/**
-	 *  0 = Combat
-	 *  1 = Stats
-	 *  2 = Quest
-	 *  3 = Inventory
-	 *  4 = Equipment
-	 *  5 = Prayer
-	 *  6 = Spellbook
-	 *  7 = Clan
-	 *  8 = Account Managment
-	 *  9 = Friends
-	 *  10 = Logout
-	 *  11 = Options
-	 *  12 = Emotes
-	 *  13 = Music
-	 */
-	PLAYER_INTERFACE_CONTAINER_OPENED(171),
-
-	INVENTORY_TAB(171),
-
-	WORLD_MAP_SEARCH_FOCUSED(190);
-
-	private final int index;
+	LEFT,
+	CENTER,
+	RIGHT
 }
