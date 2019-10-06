@@ -206,13 +206,13 @@ public class GauntletHelperOverlay extends Overlay {
     }
 
     private void renderObject(Graphics2D graphics, Color color, GameObject object){
-        Polygon objectClickbox = object.getConvexHull();
+        Polygon objectClickbox = (Polygon) object.getConvexHull();
         drawPolygon(graphics, objectClickbox, color);
     }
 
 
     private void renderActor(Graphics2D graphics, Color color, Actor actor){
-        Polygon objectClickbox = actor.getConvexHull();
+        Polygon objectClickbox = (Polygon) actor.getConvexHull();
         drawPolygon(graphics, objectClickbox, color);
     }
 
