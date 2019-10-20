@@ -27,11 +27,11 @@ package net.runelite.client.plugins.suppliestracker;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import net.runelite.client.game.AsyncBufferedImage;
+import net.runelite.client.util.AsyncBufferedImage;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
-import net.runelite.client.util.StackFormatter;
+import net.runelite.client.util.QuantityFormatter;
 import net.runelite.client.util.Text;
 import net.runelite.http.api.item.ItemPrice;
 
@@ -160,8 +160,8 @@ class SuppliesBox extends JPanel
 	{
 		buildItems();
 
-		priceLabel.setText(StackFormatter.quantityToStackSize(totalPrice) + " gp");
-		priceLabel.setToolTipText(StackFormatter.formatNumber(totalPrice) + " gp");
+		priceLabel.setText(QuantityFormatter.quantityToStackSize(totalPrice) + " gp");
+		priceLabel.setToolTipText(QuantityFormatter.formatNumber(totalPrice) + " gp");
 
 		final long supplies = getTotalSupplies();
 		if (supplies > 0)
@@ -334,7 +334,7 @@ class SuppliesBox extends JPanel
 		final String name = item.getName();
 		final int quantity = item.getQuantity();
 		final long price = item.getPrice();
-		return name + " x " + quantity + " (" + StackFormatter.quantityToStackSize(price) + ") ";
+		return name + " x " + quantity + " (" + QuantityFormatter.quantityToStackSize(price) + ") ";
 	}
 
 }

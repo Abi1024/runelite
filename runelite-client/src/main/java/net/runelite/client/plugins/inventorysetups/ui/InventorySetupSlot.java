@@ -25,7 +25,7 @@
  */
 package net.runelite.client.plugins.inventorysetups.ui;
 
-import net.runelite.client.game.AsyncBufferedImage;
+import net.runelite.client.util.AsyncBufferedImage;
 
 import javax.swing.*;
 import java.awt.*;

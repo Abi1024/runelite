@@ -25,7 +25,7 @@
  */
 package net.runelite.client.plugins.inventorysetups.ui;
 
-import net.runelite.client.game.AsyncBufferedImage;
+import net.runelite.client.util.AsyncBufferedImage;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.ItemVariationMapping;
 import net.runelite.client.plugins.inventorysetups.InventorySetupConfig;

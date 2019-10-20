@@ -46,7 +46,7 @@ import net.runelite.client.util.PvPUtil;
 import net.runelite.http.api.hiscore.HiscoreResult;
 import net.runelite.http.api.hiscore.HiscoreSkill;
 import net.runelite.http.api.hiscore.HiscoreEndpoint;
-import static net.runelite.client.util.StackFormatter.formatNumber;
+import static net.runelite.client.util.QuantityFormatter.formatNumber;
 import net.runelite.client.util.Text;
 
 @Singleton
