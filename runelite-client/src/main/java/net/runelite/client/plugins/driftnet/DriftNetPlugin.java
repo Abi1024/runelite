@@ -22,28 +22,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package net.runelite.client.plugins.driftnet;
 
 import com.google.inject.Provides;
-import static java.lang.Math.abs;
 import lombok.Getter;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.Client;
-import net.runelite.api.GameObject;
-import net.runelite.api.GameState;
-import net.runelite.api.NPC;
-import net.runelite.api.NpcID;
-import net.runelite.api.Varbits;
-import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.ChatMessage;
-import net.runelite.api.events.GameObjectDespawned;
-import net.runelite.api.events.GameObjectSpawned;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.InteractingChanged;
-import net.runelite.api.events.NpcDespawned;
-import net.runelite.api.events.NpcSpawned;
-import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.*;
+import net.runelite.api.events.*;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -51,203 +36,164 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.HashSet;
 
 @PluginDescriptor(
-	name = "DriftNet Helper",
-	description = "Provides various overlays to assist with underwater driftnet fishing.",
-	tags = {"overlay", "fishing"}
+        name = "DriftNet Helper",
+        description = "Provides various overlays to assist with underwater driftnet fishing.",
+        tags = {"overlay", "fishing"}
 )
-public class DriftNetPlugin extends Plugin
-{
-	private final int NORTH_NET_ID = 31433;
-	private final int SOUTH_NET_ID = 31434;
 
-	DriftNet northNet = new DriftNet();
-	DriftNet southNet = new DriftNet();
+public class DriftNetPlugin extends Plugin {
+    private final int NORTH_NET_ID = 31433;
+    private final int SOUTH_NET_ID = 31434;
 
-	private NPC interacting = null;
+    DriftNet northNet = new DriftNet();
+    DriftNet southNet = new DriftNet();
 
-	@Getter
-	private HashMap<NPC, Long> fishes = new HashMap<>();
+    private NPC interacting = null;
 
-	@Inject
-	private OverlayManager overlayManager;
+    @Getter
+    private HashMap<NPC,Long> fishes = new HashMap<>();
 
-	@Inject
-	private DriftNetConfig config;
+    @Inject
+    private OverlayManager overlayManager;
 
-	@Inject
-	private DriftNetOverlay driftNetOverlay;
+    @Inject
+    private DriftNetConfig config;
 
-	@Inject
-	private InfoBoxOverlay infoBoxOverlay;
+    @Inject
+    private DriftNetOverlay driftNetOverlay;
 
-	@Inject
-	private Client client;
+    @Inject
+    private InfoBoxOverlay infoBoxOverlay;
 
-	@Override
-	protected void startUp() throws Exception
-	{
-		overlayManager.add(driftNetOverlay);
-		overlayManager.add(infoBoxOverlay);
-	}
 
-	@Override
-	protected void shutDown() throws Exception
-	{
-		overlayManager.remove(driftNetOverlay);
-		overlayManager.remove(infoBoxOverlay);
-	}
+    @Inject
+    private Client client;
 
-	@Subscribe
-	public void onGameStateChanged(GameStateChanged event)
-	{
-		if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.HOPPING)
-		{
-			northNet = new DriftNet();
-			southNet = new DriftNet();
-			interacting = null;
-			fishes.clear();
-		}
-	}
+    @Getter
+    private HashSet<NPC> bosses = new HashSet<>();
 
-	@Provides
-	DriftNetConfig provideConfig(ConfigManager configManager)
-	{
-		return configManager.getConfig(DriftNetConfig.class);
-	}
+    @Override
+    protected void startUp() throws Exception
+    {
+        System.out.println("Started DriftNetPlugin");
+        overlayManager.add(driftNetOverlay);
+        overlayManager.add(infoBoxOverlay);
+    }
 
-	@Subscribe
-	public void onGameObjectSpawned(GameObjectSpawned event)
-	{
-		GameObject gameObject = event.getGameObject();
-		if (event.getGameObject().getId() == SOUTH_NET_ID)
-		{
-			southNet.setDriftNet(gameObject);
-		}
-		else if (event.getGameObject().getId() == NORTH_NET_ID)
-		{
-			northNet.setDriftNet(gameObject);
-		}
-	}
+    @Override
+    protected void shutDown() throws Exception
+    {
+        overlayManager.remove(driftNetOverlay);
+        overlayManager.remove(infoBoxOverlay);
+    }
 
-	@Subscribe
-	public void onVarbitChanged(VarbitChanged event)
-	{
-		//setting the net state
-		DriftNet[] nets = {northNet, southNet};
-		Varbits[] net_varbits = {Varbits.NORTH_NET, Varbits.SOUTH_NET};
-		Varbits[] fish_caught_varbits = {Varbits.NORTH_NET_FISH, Varbits.SOUTH_NET_FISH};
-		for (int i = 0; i < nets.length; i++)
-		{
-			switch (client.getVar(net_varbits[i]))
-			{
-				case 0:
-					nets[i].setNetStatus(DriftNet.DriftNetStatus.UNSET);
-					break;
-				case 1:
-				case 2:
-					nets[i].setNetStatus(DriftNet.DriftNetStatus.SET);
-					break;
-				case 3:
-					nets[i].setNetStatus(DriftNet.DriftNetStatus.FULL);
-					break;
-			}
-			if (nets[i].getNetStatus() != DriftNet.DriftNetStatus.UNSET)
-			{
-				nets[i].setNumFish(client.getVar(fish_caught_varbits[i]));
-			}
-		}
-	}
+    @Provides
+    DriftNetConfig provideConfig(ConfigManager configManager)
+    {
+        return configManager.getConfig(DriftNetConfig.class);
+    }
 
-	@Subscribe
-	public void onGameObjectDespawned(GameObjectDespawned event)
-	{
-		if (event.getGameObject().getId() == SOUTH_NET_ID)
-		{
-			southNet.setDriftNet(null);
-		}
-		else if (event.getGameObject().getId() == NORTH_NET_ID)
-		{
-			northNet.setDriftNet(null);
-		}
-	}
+    @Subscribe
+    public void onGameObjectSpawned(GameObjectSpawned event)
+    {
+        GameObject gameObject = event.getGameObject();
+        //ObjectComposition objectComposition = client.getObjectDefinition(gameObject.getId());
+        if (event.getGameObject().getId() == SOUTH_NET_ID){
+            southNet.setDriftNet(gameObject);
+        }else if (event.getGameObject().getId() == NORTH_NET_ID) {
+            northNet.setDriftNet(gameObject);
+        }
+    }
 
-	@Subscribe
-	public void onNpcSpawned(NpcSpawned event)
-	{
-		NPC npc = event.getNpc();
-		if (npc.getId() == NpcID.FISH_SHOAL)
-		{
-			fishes.put(npc, -1L);
-		}
-	}
+    @Subscribe
+    public void onMenuEntryAdded(MenuEntryAdded event){
+        DriftNet net = null;
+        if (event.getIdentifier() == SOUTH_NET_ID){
+            net = southNet;
+        }else if (event.getIdentifier() == NORTH_NET_ID) {
+            net = northNet;
+        }
+        if (net != null) {
+            if (event.getOption() != null) {
+                //System.out.println("ID: " + event.getIdentifier() + " " + "Option: " + event.getOption());
+                if (event.getTarget().toLowerCase().contains("(full)")) {
+                    net.setNetStatus(DriftNet.DriftNetStatus.FULL);
+                } else if (event.getOption().toLowerCase().contains("set")) {
+                    net.setNetStatus(DriftNet.DriftNetStatus.UNSET);
+                } else {
+                    net.setNetStatus(DriftNet.DriftNetStatus.SET);
+                }
+            }
+        }
+        //System.out.println("Menu entry added;" + event.getOption() + " " + event.getTarget()+ event.getIdentifier() + " " + event.getType());
+    }
 
-	@Subscribe
-	public void onNpcDespawned(NpcDespawned event)
-	{
-		NPC npc = event.getNpc();
-		if (npc.getId() == NpcID.FISH_SHOAL)
-		{
-			fishes.remove(npc);
-		}
-	}
+    @Subscribe
+    public void onGameObjectDespawned(GameObjectDespawned event)
+    {
+        if (event.getGameObject().getId() == SOUTH_NET_ID){
+            southNet.setDriftNet(null);
+        }else if (event.getGameObject().getId() == NORTH_NET_ID) {
+            northNet.setDriftNet(null);
+        }
+    }
 
-	@Subscribe
-	public void onInteractingChanged(InteractingChanged event)
-	{
-		if (event.getSource() == client.getLocalPlayer()
-			&& event.getTarget() instanceof NPC
-			&& ((NPC) event.getTarget()).getId() == NpcID.FISH_SHOAL)
-		{
-			interacting = (NPC) event.getTarget();
-		}
-	}
+    @Subscribe
+    public void onNpcSpawned(NpcSpawned event){
+        NPC npc = event.getNpc();
+        if (npc.getId() == NpcID.FISH_SHOAL){
+            fishes.put(npc,-1L);
+        }
+    }
 
-	@Subscribe
-	public void onGameTick(GameTick tick)
-	{
-		for (NPC fish : fishes.keySet())
-		{
-			if (fishes.get(fish) > 0
-				&& System.currentTimeMillis() - fishes.get(fish) > 1000 * config.highlightDuration())
-			{
-				fishes.put(fish, -1L);
-			}
-		}
-	}
+    @Subscribe
+    public void onNpcDespawned(NpcDespawned event){
+        NPC npc = event.getNpc();
+        if (npc.getId() == NpcID.FISH_SHOAL){
+            fishes.remove(npc);
+        }
+    }
 
-	@Subscribe
-	public void onChatMessage(ChatMessage event)
-	{
-		if (event.getType() != ChatMessageType.SPAM && event.getType() != ChatMessageType.GAMEMESSAGE)
-		{
-			return;
-		}
-		if (event.getMessage().toLowerCase().contains("prod at"))
-		{
-			fishes.put(interacting, System.currentTimeMillis());
-		}
-	}
+    @Subscribe
+    public void onInteractingChanged(InteractingChanged event){
+        if (event.getSource() == client.getLocalPlayer()){
+            if (event.getTarget() instanceof NPC){
+                if (((NPC)event.getTarget()).getId() == NpcID.FISH_SHOAL){
+                    interacting = (NPC) event.getTarget();
+                }
+            }
+        }
 
-	private int supNorm(WorldPoint w1, WorldPoint w2)
-	{
-		int x = abs(w1.getX() - w2.getX());
-		int y = abs(w1.getY() - w2.getY());
-		return Math.max(x, y);
-	}
+    }
 
-	boolean isInDriftNetArea()
-	{
-		for (NPC fish : fishes.keySet())
-		{
-			if (fish != null
-				&& client.getLocalPlayer().getWorldLocation().getPlane() == fish.getWorldLocation().getPlane()
-				&& supNorm(client.getLocalPlayer().getWorldLocation(), fish.getWorldLocation()) < 25)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
+    @Subscribe
+    public void onGameTick(GameTick tick){
+        for (NPC fish: fishes.keySet()){
+            if (fishes.get(fish) > 0){
+                if (System.currentTimeMillis() - fishes.get(fish) > 1000*config.highlightDuration()){
+                    fishes.put(fish,-1L);
+                }
+            }
+        }
+    }
+
+    @Subscribe
+    public void onChatMessage(ChatMessage event){
+        if (event.getType() != ChatMessageType.SPAM && event.getType() != ChatMessageType.GAMEMESSAGE)
+        {
+            return;
+        }
+        //System.out.println(event.getMessage());
+        if (event.getMessage().toLowerCase().contains("prod at")){
+            if (!fishes.containsKey(interacting)){
+                System.out.println("Error");
+            }else{
+                fishes.put(interacting,System.currentTimeMillis());
+            }
+        }
+    }
+
 }

@@ -22,6 +22,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 package net.runelite.client.plugins.driftnet;
 
 import net.runelite.client.ui.overlay.Overlay;
@@ -30,10 +32,9 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.ComponentConstants;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.components.PanelComponent;
+
 import javax.inject.Inject;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
+import java.awt.*;
 
 public class InfoBoxOverlay extends Overlay
 {
@@ -47,48 +48,46 @@ public class InfoBoxOverlay extends Overlay
 		this.config = config;
 		this.plugin = plugin;
 		setPosition(OverlayPosition.TOP_CENTER);
-		setLayer(OverlayLayer.ABOVE_SCENE);
+		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 	}
 
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
 		panelComponent.getChildren().clear();
-		if (!config.infoBox() || !plugin.isInDriftNetArea())
+		if (config.infoBox())
 		{
-			return null;
-		}
-		DriftNet[] nets = {plugin.northNet, plugin.southNet};
-		for (int i = 0; i < nets.length; i++)
-		{
-			DriftNet net = nets[i];
-			String text1 = (i == 0) ? "North Net:" : "South Net:";
-			String text2 = "";
-			switch (net.getNetStatus())
+			DriftNet[] nets = {plugin.northNet, plugin.southNet};
+			for (int i = 0; i < nets.length; i++)
 			{
-				case FULL:
-					text2 = "FULL";
-					break;
-				case SET:
-					text2 = (net.getNumFish() + "/10");
-					break;
-				case UNSET:
-					text2 = "UNSET";
-					break;
-				default:
-					break;
+				DriftNet net = nets[i];
+				String text1 = (i == 0) ? "North Net:" : "South Net:";
+				String text2 = "";
+				switch (net.getNetStatus())
+				{
+					case FULL:
+						text2 = "FULL";
+						break;
+					case SET:
+						text2 = "SET";
+						break;
+					case UNSET:
+						text2 = "UNSET";
+						break;
+					default:
+						break;
+				}
+				Color color = DriftNetOverlay.getColor(net);
+				if (color != null)
+				{
+					panelComponent.getChildren().add(LineComponent.builder().rightColor(color).preferredSize(new Dimension(ComponentConstants.STANDARD_WIDTH - 15, 0))
+						.left(text1)
+						.right(text2)
+						.build());
+				}
 			}
-			Color color = DriftNetOverlay.getColor(net);
-			if (color != null)
-			{
-				panelComponent.getChildren().add(LineComponent.builder()
-					.rightColor(color)
-					.preferredSize(new Dimension(ComponentConstants.STANDARD_WIDTH - 15, 0))
-					.left(text1)
-					.right(text2)
-					.build());
-			}
+			panelComponent.render(graphics);
 		}
-		return panelComponent.render(graphics);
+		return null;
 	}
 }

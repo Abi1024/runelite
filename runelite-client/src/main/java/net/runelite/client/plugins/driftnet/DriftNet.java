@@ -22,6 +22,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package net.runelite.client.plugins.driftnet;
 
 import lombok.Getter;
@@ -30,16 +31,14 @@ import net.runelite.api.GameObject;
 
 @Setter
 @Getter
-class DriftNet
-{
-	private DriftNetStatus netStatus = DriftNetStatus.UNSET;
-	private GameObject driftNet = null;
-	private int numFish = 0;
+class DriftNet {
+    private DriftNetStatus netStatus = DriftNetStatus.UNSET;
+    private GameObject driftNet = null;
 
-	public enum DriftNetStatus
-	{
-		UNSET,
-		SET,
-		FULL
-	}
+    public enum DriftNetStatus
+    {
+        UNSET,
+        SET,
+        FULL
+    }
 }

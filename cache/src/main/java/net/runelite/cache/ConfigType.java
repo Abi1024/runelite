@@ -39,6 +39,9 @@ public enum ConfigType
 	PARAMS(11),
 	SEQUENCE(12),
 	SPOTANIM(13),
+
+
+
 	VARBIT(14),
 	VARCLIENT(19),
 	VARCLIENTSTRING(15),
