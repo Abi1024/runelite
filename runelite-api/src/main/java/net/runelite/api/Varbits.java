@@ -455,7 +455,7 @@ public enum Varbits
 	SOUTH_NET(5814),
 	NORTH_NET_FISH(5813),
 	SOUTH_NET_FISH(5815),
-
+	
 	/**
 	 * Corp beast damage
 	 */
