@@ -28,6 +28,8 @@ package net.runelite.client.plugins.inventorysetups;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Provides;
+import java.awt.Color;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.ConfigChanged;
@@ -93,6 +95,24 @@ public class InventorySetupPlugin extends Plugin
 
 	@Inject
 	private ConfigManager configManager;
+
+	@Getter
+	private boolean HighLightDifferences;
+
+	@Getter
+	private Color HighLightColor;
+
+	@Getter
+	private boolean StackDifference;
+
+	@Getter
+	private boolean VariationDifference;
+
+	@Getter
+	private boolean BankHighlight;
+
+	@Getter
+	private Color BankHighlightColor;
 
 	private InventorySetupPluginPanel panel;
 
@@ -384,6 +404,9 @@ public class InventorySetupPlugin extends Plugin
 	public final InventorySetupConfig getConfig()
 	{
 		return config;
+
+
+
 	}
 
 	public boolean getHighlightDifference()
