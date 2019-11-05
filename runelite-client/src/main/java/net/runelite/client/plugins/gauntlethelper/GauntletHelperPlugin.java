@@ -42,6 +42,9 @@ public class GauntletHelperPlugin extends Plugin {
     private HashSet<NPC> monsters = new HashSet<>();
 
     @Getter
+	private NPC hunllef = null;
+
+    @Getter
     private HashSet<Tornado> tornados = new HashSet<>();
 
     @Inject
@@ -110,39 +113,37 @@ public class GauntletHelperPlugin extends Plugin {
         if (animationChanged.getActor().getAnimation() == IDLE){
             return;
         }
-        if (animationChanged.getActor() == client.getLocalPlayer()){
-            if (animationChanged.getActor().getInteracting() != null){
-                if (animationChanged.getActor().getInteracting() instanceof NPC){
-                    NPC boss = (NPC)animationChanged.getActor().getInteracting();
-                    if (boss.getName() != null){
-                        if (boss.getName().toLowerCase().contains("hunllef")){
-                            int animation = animationChanged.getActor().getAnimation();
-                            if (!PLAYER_ANIMATIONS.contains(animation)){
-                                return;
-                            }
-                            switch(client.getNpcDefinition(boss.getId()).getOverheadIcon()){
-                                case MAGIC:
-                                    if (animation != STAFF_ATTACK){
-                                        offprayerHit();
-                                    }
-                                    break;
-                                case MELEE:
-                                    if (!MELEE_ANIMATIONS.contains(animation)){
-                                        offprayerHit();
-                                    }
-                                    break;
-                                case RANGED:
-                                    if (animation != BOW_ATTACK){
-                                        offprayerHit();
-                                    }
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-                    }
-                }
-            }
+        if (animationChanged.getActor() instanceof Player){
+        	//System.out.println("Player animation changed. " + animationChanged.getActor().getAnimation() );
+			int animation = animationChanged.getActor().getAnimation();
+			//System.out.println("Player interacting  with boss");
+			if (!PLAYER_ANIMATIONS.contains(animation) || !fightingBoss() || hunllef == null ){
+				return;
+			}
+			//System.out.println("Valid animation.");
+			switch(client.getNpcDefinition(hunllef.getId()).getOverheadIcon())
+			{
+				case MAGIC:
+					if (animation != STAFF_ATTACK)
+					{
+						offprayerHit();
+					}
+					break;
+				case MELEE:
+					if (!MELEE_ANIMATIONS.contains(animation))
+					{
+						offprayerHit();
+					}
+					break;
+				case RANGED:
+					if (animation != BOW_ATTACK)
+					{
+						offprayerHit();
+					}
+					break;
+				default:
+					break;
+			}
         }
         if (animationChanged.getActor().getName() != null){
             if (animationChanged.getActor().getName().contains("Hunllef")){
@@ -240,7 +241,10 @@ public class GauntletHelperPlugin extends Plugin {
         }
         NPC npc = event.getNpc();
         //System.out.println("NPC spawned " + npc.getName());
-        if (npc.getId() == 9025 || npc.getId() == 9039){
+		if (npc.getName().toLowerCase().contains("hunllef")){
+			hunllef = npc;
+		}
+        else if (npc.getId() == 9025 || npc.getId() == 9039){
             tornados.add(new Tornado(npc));
         }
         else if (npc.getName().toLowerCase().contains("beast") ||
@@ -261,6 +265,10 @@ public class GauntletHelperPlugin extends Plugin {
             return;
         }
         NPC npc = event.getNpc();
+        if (npc == hunllef){
+        	hunllef = null;
+        	return;
+		}
         //System.out.println("NPC DEspawned " + npc.getName());
         tornados.remove(npc);
         bosses.remove(npc);
@@ -346,11 +354,17 @@ public class GauntletHelperPlugin extends Plugin {
     }
 
     private void offprayerHit(){
+    	//System.out.println("offprayerhit");
         num_player_hits++;
         if (num_player_hits == 6){
             num_player_hits = 0;
         }
     }
+
+	boolean fightingBoss()
+	{
+		return client.getVar(Varbits.GAUNTLET_FINAL_ROOM_ENTERED) == 1;
+	}
 
 
 }

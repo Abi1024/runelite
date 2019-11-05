@@ -3,6 +3,7 @@ package net.runelite.client.plugins.gauntlethelper;
 import net.runelite.api.*;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.geometry.SimplePolygon;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.overlay.Overlay;
 
@@ -68,11 +69,9 @@ public class GauntletHelperOverlay extends Overlay {
         }else {
             color = new Color(255, 0, 0);
         }
-        if (!client.getNpcs().stream().filter(npc -> (npc.getName() != null) && (npc.getName().contains("Hunllef"))).findFirst().isPresent()){
-            return;
-        }
-        NPC hunllef = client.getNpcs().stream().filter(npc -> (npc.getName() != null) && (npc.getName().contains("Hunllef"))).findFirst().get();
-        renderActor(graphics,color,hunllef);
+        if (plugin.getHunllef() != null){
+			renderActor(graphics,color,plugin.getHunllef());
+		}
     }
 
     private void renderSupplySpots(Graphics2D graphics){
@@ -206,17 +205,17 @@ public class GauntletHelperOverlay extends Overlay {
     }
 
     private void renderObject(Graphics2D graphics, Color color, GameObject object){
-        Polygon objectClickbox = (Polygon) object.getConvexHull();
+        SimplePolygon objectClickbox = (SimplePolygon) object.getConvexHull();
         drawPolygon(graphics, objectClickbox, color);
     }
 
 
     private void renderActor(Graphics2D graphics, Color color, Actor actor){
-        Polygon objectClickbox = (Polygon) actor.getConvexHull();
+        SimplePolygon objectClickbox = (SimplePolygon) actor.getConvexHull();
         drawPolygon(graphics, objectClickbox, color);
     }
 
-    private void drawPolygon(Graphics2D graphics, Polygon polygon, Color color){
+    private void drawPolygon(Graphics2D graphics, SimplePolygon polygon, Color color){
         if (polygon != null)
         {
             graphics.setColor(color);
