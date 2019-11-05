@@ -119,6 +119,10 @@ public class DriftNetOverlay extends Overlay
 			{
 				color = Color.GREEN;
 			}
+			if (entry.getKey() == null){
+				System.out.println("Error");
+				return;
+			}
 			renderActor(graphics, color, entry.getKey());
 		}
 	}

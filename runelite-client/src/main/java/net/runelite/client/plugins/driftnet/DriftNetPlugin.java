@@ -158,10 +158,6 @@ public class DriftNetPlugin extends Plugin
 				nets[i].setNumFish(client.getVar(fish_caught_varbits[i]));
 			}
 		}
-		System.out.println("North Net: " + client.getVar(Varbits.NORTH_NET));
-		System.out.println("South Net: " + client.getVar(Varbits.SOUTH_NET));
-		System.out.println("North Net Fish: " + client.getVar(Varbits.NORTH_NET_FISH));
-		System.out.println("South Net Fish: " + client.getVar(Varbits.SOUTH_NET_FISH));
 	}
 
 	@Subscribe
