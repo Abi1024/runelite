@@ -18,7 +18,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.TreeMap;
 
-import static net.runelite.client.util.QuantityFormatter.quantityToRSDecimalStack;
+import static net.runelite.client.util.StackFormatter.quantityToRSDecimalStack;
 
 /**
  *

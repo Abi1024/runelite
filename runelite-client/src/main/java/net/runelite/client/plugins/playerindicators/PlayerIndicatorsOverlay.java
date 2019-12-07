@@ -46,7 +46,7 @@ import net.runelite.client.util.PvPUtil;
 import net.runelite.http.api.hiscore.HiscoreResult;
 import net.runelite.http.api.hiscore.HiscoreSkill;
 import net.runelite.http.api.hiscore.HiscoreEndpoint;
-import static net.runelite.client.util.QuantityFormatter.formatNumber;
+import static net.runelite.client.util.StackFormatter.formatNumber;
 import net.runelite.client.util.Text;
 
 @Singleton
@@ -254,7 +254,6 @@ public class PlayerIndicatorsOverlay extends Overlay
 								textLocation.getY() - height),
 							ImageUtil.resizeImage(agilityIcon, height, height));
 					}
-					/*
 					if (level < plugin.getAgilityFirstThreshold())
 					{
 						OverlayUtil.renderImageLocation(graphics,
@@ -262,8 +261,6 @@ public class PlayerIndicatorsOverlay extends Overlay
 								textLocation.getY() - height),
 							ImageUtil.resizeImage(noAgilityIcon, height, height));
 					}
-					*/
-
 				}
 				else
 				{
