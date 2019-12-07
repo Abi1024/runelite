@@ -61,7 +61,7 @@ public class LootAssistPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick tickEvent) {
 		boolean inDeadman = client.getWorldType().stream().anyMatch(x ->
-				x == WorldType.DEADMAN || x == WorldType.SEASONAL_DEADMAN);
+				x == WorldType.DEADMAN);
 		boolean inPvp = client.getWorldType().stream().anyMatch(x ->
 				x == WorldType.PVP || x == WorldType.HIGH_RISK);
 		shouldDisplayOverlay = false;

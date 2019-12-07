@@ -84,17 +84,13 @@ public enum WorldType
 	private static final EnumSet<WorldType> ALL_PVP_WORLD_TYPES = EnumSet.of(
 			HIGH_RISK,
 			DEADMAN,
-			DEADMAN_TOURNAMENT,
-			PVP,
-			SEASONAL_DEADMAN
+			PVP
 	);
 
 	private static final EnumSet<WorldType> ALL_PK_WORLD_TYPES = EnumSet.of(
 			HIGH_RISK,
 			DEADMAN,
-			DEADMAN_TOURNAMENT,
 			PVP,
-			SEASONAL_DEADMAN,
 			BOUNTY
 	);
 

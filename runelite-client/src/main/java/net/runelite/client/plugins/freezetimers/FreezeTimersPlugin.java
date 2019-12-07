@@ -158,7 +158,7 @@ public class FreezeTimersPlugin extends Plugin
                 }
                 //if not in wilderness, but in a deadman world and not in a deadman safe zone
                 boolean inDeadman = client.getWorldType().stream().anyMatch(x ->
-                        x == WorldType.DEADMAN || x == WorldType.SEASONAL_DEADMAN);
+                        x == WorldType.DEADMAN);
                 if (inDeadman && !MapLocations.isLocationInDeadmanSafe(actor.getWorldLocation())){
                     continue;
                 }

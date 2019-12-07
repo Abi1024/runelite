@@ -128,7 +128,7 @@ public class HatCounterPlugin extends Plugin
                 )
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         boolean inDeadman = client.getWorldType().stream().anyMatch(x ->
-                x == WorldType.DEADMAN || x == WorldType.SEASONAL_DEADMAN);
+                x == WorldType.DEADMAN);
         boolean inPvp = client.getWorldType().stream().anyMatch(x ->
                 x == WorldType.PVP || x == WorldType.HIGH_RISK);
         shouldDisplayOverlay = false;

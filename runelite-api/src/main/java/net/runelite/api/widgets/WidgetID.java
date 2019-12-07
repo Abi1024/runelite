@@ -809,6 +809,12 @@ public class WidgetID
 		static final int MEMBERS_CONTAINER = 7;
 		static final int MINIQUEST_CONTAINER = 8;
 	}
+
+	static class QuestTab
+	{
+		static final int QUEST_TAB = 3;
+	}
+
 	static class Music
 	{
 		static final int CONTAINER = 0;

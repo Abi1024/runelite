@@ -219,13 +219,13 @@ public class PlayerIndicatorsPlugin extends Plugin
 	private void getCallerList()
 	{
 		callers.clear();
-		if (this.useClanchatRanks && client.getClanMembers() != null)
+		if (this.useClanchatRanks && client.getClanMemberManager() != null && client.getClanMemberManager().getMembers() != null)
 		{
-			for (ClanMember clanMember : client.getClanMembers())
+			for (ClanMember clanMember : client.getClanMemberManager().getMembers())
 			{
 				if (clanMember.getRank().getValue() > this.callerRank.getValue())
 				{
-					callers.add(clanMember.getUsername());
+					callers.add(clanMember.getName());
 				}
 			}
 		}
