@@ -54,6 +54,7 @@ class KourendLibraryPanel extends PluginPanel
 
 	private final KourendLibraryConfig config;
 	private final Library library;
+	private final KourendLibraryPlugin plugin;
 
 	private final HashMap<Book, BookPanel> bookPanels = new HashMap<>();
 
@@ -65,12 +66,13 @@ class KourendLibraryPanel extends PluginPanel
 	}
 
 	@Inject
-	KourendLibraryPanel(KourendLibraryConfig config, Library library)
+	KourendLibraryPanel(KourendLibraryConfig config, Library library, KourendLibraryPlugin plugin)
 	{
 		super();
 
 		this.config = config;
 		this.library = library;
+		this.plugin = plugin;
 	}
 
 	void init()
@@ -168,11 +170,6 @@ class KourendLibraryPanel extends PluginPanel
 		SwingUtilities.invokeLater(() ->
 		{
 			Book customerBook = library.getCustomerBook();
-			for (Map.Entry<Book, BookPanel> b : bookPanels.entrySet())
-			{
-				b.getValue().setIsTarget(customerBook == b.getKey());
-			}
-
 			HashMap<Book, HashSet<String>> bookLocations = new HashMap<>();
 
 			for (Bookcase bookcase : library.getBookcases())
@@ -181,13 +178,6 @@ class KourendLibraryPanel extends PluginPanel
 				{
 					System.out.println("Bookcase: " + bookcase.getIndex() + " book: " + bookcase.getBook());
 					bookLocations.computeIfAbsent(bookcase.getBook(), a -> new HashSet<>()).add(bookcase.getLocationString());
-					if (bookcase.getBook().isDarkManuscript()){
-						if (matching_manuscript(bookcase)){
-							bookPanels.get(bookcase.getBook()).setVisible(true);
-						}else {
-							bookPanels.get(bookcase.getBook()).setVisible(false);
-						}
-					}
 				}
 				else
 				{
@@ -197,13 +187,6 @@ class KourendLibraryPanel extends PluginPanel
 						if (book != null)
 						{
 							bookLocations.computeIfAbsent(book, a -> new HashSet<>()).add(bookcase.getLocationString());
-							if (book.isDarkManuscript()){
-								if (matching_manuscript(bookcase)){
-									bookPanels.get(book).setVisible(true);
-								}else {
-									bookPanels.get(book).setVisible(false);
-								}
-							}
 						}
 					}
 				}
@@ -211,7 +194,27 @@ class KourendLibraryPanel extends PluginPanel
 
 			for (Map.Entry<Book, BookPanel> e : bookPanels.entrySet())
 			{
+				if (!e.getKey().isDarkManuscript()){
+					e.getValue().setColor(plugin.doesPlayerContainBook(e.getKey()),library.getCustomerBook() == e.getKey());
+				}
 				HashSet<String> locs = bookLocations.get(e.getKey());
+				if (locs != null && locs.size() < 4){
+					if (e.getKey().isDarkManuscript()){
+						boolean flag = false;
+						for (String location : locs){
+							if (matching_manuscript(location)){
+								flag = true;
+								break;
+							}
+						}
+						if (flag){
+							e.getValue().setVisible(true);
+							e.getValue().setIsManuscript();
+						}else{
+							e.getValue().setVisible(false);
+						}
+					}
+				}
 				if (locs == null || locs.size() > 3)
 				{
 					e.getValue().setLocation("Unknown");
@@ -220,6 +223,7 @@ class KourendLibraryPanel extends PluginPanel
 				{
 					e.getValue().setLocation("<html>" + locs.stream().collect(Collectors.joining("<br>")) + "</html>");
 				}
+
 			}
 		});
 	}
@@ -231,41 +235,41 @@ class KourendLibraryPanel extends PluginPanel
 		init();
 	}
 
-	private boolean matching_manuscript(Bookcase bookcase){
-		System.out.println("Bookcase location: " + bookcase.getLocationString());
+	private boolean matching_manuscript(String location){
+		System.out.println("Bookcase location: " + location);
 		System.out.println("Target manuscript: " + library.getDark_manuscript_location()[0] + " " + library.getDark_manuscript_location()[1]); ;
 		boolean flag = false;
-		if ( bookcase.getLocationString().toLowerCase().contains("northwest") &&
+		if ( location.toLowerCase().contains("northwest") &&
 			library.getDark_manuscript_location()[1].contains("north-west"))
 		{
 			flag = true;
-		}else if ( bookcase.getLocationString().toLowerCase().contains("southwest") &&
+		}else if ( location.toLowerCase().contains("southwest") &&
 			library.getDark_manuscript_location()[1].contains("south-west"))
 		{
 			flag = true;
-		}else if ( bookcase.getLocationString().toLowerCase().contains("central") &&
+		}else if ( location.toLowerCase().contains("center") &&
 			library.getDark_manuscript_location()[1].contains("central"))
 		{
 			flag = true;
-		}else if ( bookcase.getLocationString().toLowerCase().contains("northeast") &&
+		}else if ( location.toLowerCase().contains("northeast") &&
 			library.getDark_manuscript_location()[1].contains("north-east"))
 		{
 			flag = true;
-		}else if ( bookcase.getLocationString().toLowerCase().contains("southeast") &&
+		}else if ( location.toLowerCase().contains("southeast") &&
 			library.getDark_manuscript_location()[1].contains("south-east"))
 		{
 			flag = true;
 		}
 		System.out.println("First Flag " + flag);
-		if ( bookcase.getLocationString().toLowerCase().contains("ground") &&
+		if ( location.toLowerCase().contains("ground") &&
 			library.getDark_manuscript_location()[0].equals("bottom"))
 		{
 			flag &= true;
-		}else if ( bookcase.getLocationString().toLowerCase().contains("middle") &&
+		}else if ( location.toLowerCase().contains("middle") &&
 			library.getDark_manuscript_location()[0].equals("middle"))
 		{
 			flag &= true;
-		}else if ( bookcase.getLocationString().toLowerCase().contains("top") &&
+		}else if ( location.toLowerCase().contains("top") &&
 			library.getDark_manuscript_location()[0].equals("top"))
 		{
 			flag &= true;

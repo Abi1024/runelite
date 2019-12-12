@@ -80,13 +80,25 @@ class BookPanel extends JPanel
 		this.location.setText(location);
 	}
 
-	void setIsTarget(boolean target)
-	{
-		location.setForeground(target ? Color.GREEN : Color.WHITE);
-	}
-
 	void setIsManuscript(){
 		location.setForeground(Color.MAGENTA);
 	}
+
+	void setColor(boolean containsBook, boolean isTarget){
+		if (containsBook){
+			if (isTarget){
+				location.setForeground(Color.GREEN);
+			}else{
+				location.setForeground(Color.WHITE);
+			}
+		}else{
+			if (isTarget){
+				location.setForeground(Color.RED);
+			}else{
+				location.setForeground(Color.YELLOW);
+			}
+		}
+	}
+
 
 }
