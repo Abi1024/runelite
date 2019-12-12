@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.stream.IntStream;
 import javax.inject.Singleton;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.coords.WorldPoint;
 
@@ -72,6 +73,10 @@ class Library
 
 	@Getter
 	private Book customerBook;
+
+	@Setter
+	@Getter
+	private String[] dark_manuscript_location = new String[]{"",""};
 
 	@Getter
 	private int customerId;

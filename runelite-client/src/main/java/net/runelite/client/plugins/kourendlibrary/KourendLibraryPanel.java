@@ -86,13 +86,65 @@ class KourendLibraryPanel extends PluginPanel
 		c.gridx = 0;
 		c.gridy = 0;
 		Stream.of(Book.values())
-			.filter(b -> !b.isDarkManuscript())
+			/*.filter(b ->
+			{
+				if (!b.isDarkManuscript()){
+					return true;
+				}
+				for (Bookcase bookcase : library.getBookcases()){
+					if ( bookcase.getBook() != null && bookcase.getBook().isDarkManuscript()){
+						boolean flag = false;
+						if ( bookcase.getLocationString().toLowerCase().contains("Northwest") &&
+							library.getDark_manuscript_location()[1].contains("north-west"))
+						{
+							flag = true;
+						}else if ( bookcase.getLocationString().toLowerCase().contains("Southwest") &&
+							library.getDark_manuscript_location()[1].contains("south-west"))
+						{
+							flag = true;
+						}else if ( bookcase.getLocationString().toLowerCase().contains("Central") &&
+							library.getDark_manuscript_location()[1].contains("central"))
+						{
+							flag = true;
+						}else if ( bookcase.getLocationString().toLowerCase().contains("Northeast") &&
+							library.getDark_manuscript_location()[1].contains("north-east"))
+						{
+							flag = true;
+						}else if ( bookcase.getLocationString().toLowerCase().contains("Southeast") &&
+							library.getDark_manuscript_location()[1].contains("south-east"))
+						{
+							flag = true;
+						}
+						if (!flag){
+							return false;
+						}
+						if ( bookcase.getLocationString().toLowerCase().contains("ground") &&
+							library.getDark_manuscript_location()[0].equals("bottom"))
+						{
+							return true;
+						}else if ( bookcase.getLocationString().toLowerCase().contains("middle") &&
+							library.getDark_manuscript_location()[0].equals("middle"))
+						{
+							return true;
+						}else if ( bookcase.getLocationString().toLowerCase().contains("top") &&
+							library.getDark_manuscript_location()[0].equals("top"))
+						{
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+			)*/
 			.filter(b -> !config.hideVarlamoreEnvoy() || b != Book.VARLAMORE_ENVOY)
 			.sorted(Comparator.comparing(Book::getShortName))
 			.forEach(b ->
 			{
 				BookPanel p = new BookPanel(b);
 				bookPanels.put(b, p);
+				if (b.isDarkManuscript()){
+					p.setVisible(false);
+				}
 				books.add(p, c);
 				c.gridy++;
 			});
@@ -112,6 +164,7 @@ class KourendLibraryPanel extends PluginPanel
 
 	void update()
 	{
+		System.out.println("Updating library");
 		SwingUtilities.invokeLater(() ->
 		{
 			Book customerBook = library.getCustomerBook();
@@ -126,15 +179,31 @@ class KourendLibraryPanel extends PluginPanel
 			{
 				if (bookcase.getBook() != null)
 				{
+					System.out.println("Bookcase: " + bookcase.getIndex() + " book: " + bookcase.getBook());
 					bookLocations.computeIfAbsent(bookcase.getBook(), a -> new HashSet<>()).add(bookcase.getLocationString());
+					if (bookcase.getBook().isDarkManuscript()){
+						if (matching_manuscript(bookcase)){
+							bookPanels.get(bookcase.getBook()).setVisible(true);
+						}else {
+							bookPanels.get(bookcase.getBook()).setVisible(false);
+						}
+					}
 				}
 				else
 				{
 					for (Book book : bookcase.getPossibleBooks())
 					{
+						System.out.println("Bookcase possible: " + bookcase.getIndex() + " book: " + book);
 						if (book != null)
 						{
 							bookLocations.computeIfAbsent(book, a -> new HashSet<>()).add(bookcase.getLocationString());
+							if (book.isDarkManuscript()){
+								if (matching_manuscript(bookcase)){
+									bookPanels.get(book).setVisible(true);
+								}else {
+									bookPanels.get(book).setVisible(false);
+								}
+							}
 						}
 					}
 				}
@@ -160,5 +229,50 @@ class KourendLibraryPanel extends PluginPanel
 		bookPanels.clear();
 		removeAll();
 		init();
+	}
+
+	private boolean matching_manuscript(Bookcase bookcase){
+		System.out.println("Bookcase location: " + bookcase.getLocationString());
+		System.out.println("Target manuscript: " + library.getDark_manuscript_location()[0] + " " + library.getDark_manuscript_location()[1]); ;
+		boolean flag = false;
+		if ( bookcase.getLocationString().toLowerCase().contains("northwest") &&
+			library.getDark_manuscript_location()[1].contains("north-west"))
+		{
+			flag = true;
+		}else if ( bookcase.getLocationString().toLowerCase().contains("southwest") &&
+			library.getDark_manuscript_location()[1].contains("south-west"))
+		{
+			flag = true;
+		}else if ( bookcase.getLocationString().toLowerCase().contains("central") &&
+			library.getDark_manuscript_location()[1].contains("central"))
+		{
+			flag = true;
+		}else if ( bookcase.getLocationString().toLowerCase().contains("northeast") &&
+			library.getDark_manuscript_location()[1].contains("north-east"))
+		{
+			flag = true;
+		}else if ( bookcase.getLocationString().toLowerCase().contains("southeast") &&
+			library.getDark_manuscript_location()[1].contains("south-east"))
+		{
+			flag = true;
+		}
+		System.out.println("First Flag " + flag);
+		if ( bookcase.getLocationString().toLowerCase().contains("ground") &&
+			library.getDark_manuscript_location()[0].equals("bottom"))
+		{
+			flag &= true;
+		}else if ( bookcase.getLocationString().toLowerCase().contains("middle") &&
+			library.getDark_manuscript_location()[0].equals("middle"))
+		{
+			flag &= true;
+		}else if ( bookcase.getLocationString().toLowerCase().contains("top") &&
+			library.getDark_manuscript_location()[0].equals("top"))
+		{
+			flag &= true;
+		}else{
+			flag = false;
+		}
+		System.out.println("Flag " + flag);
+		return flag;
 	}
 }

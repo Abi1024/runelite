@@ -72,4 +72,14 @@ public interface KourendLibraryConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+		keyName = "showInfoBoxOverlay",
+		name = "Show info box overlay",
+		description = "Whether to show an infobox overlay showing where to go for the next books"
+	)
+	default boolean showInfoBoxOverlay()
+	{
+		return true;
+	}
 }

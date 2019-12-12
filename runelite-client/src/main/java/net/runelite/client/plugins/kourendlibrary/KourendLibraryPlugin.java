@@ -83,6 +83,8 @@ public class KourendLibraryPlugin extends Plugin
 
 	static final boolean debug = false;
 
+	boolean manuscript_dialog = false;
+
 	@Inject
 	private ClientToolbar clientToolbar;
 
@@ -149,6 +151,7 @@ public class KourendLibraryPlugin extends Plugin
 		{
 			clientToolbar.addNavigation(navButton);
 		}
+
 	}
 
 	@Override
@@ -161,7 +164,7 @@ public class KourendLibraryPlugin extends Plugin
 		lastBookcaseClick = null;
 		lastBookcaseAnimatedOn = null;
 		playerBooks = null;
-		npcsToMark.clear();
+		library.setDark_manuscript_location(new String[]{"",""});
 	}
 
 	@Subscribe
@@ -279,6 +282,10 @@ public class KourendLibraryPlugin extends Plugin
 					library.mark(lastBookcaseAnimatedOn, book);
 					panel.update();
 					lastBookcaseAnimatedOn = null;
+					if (book.isDarkManuscript()){
+						library.setDark_manuscript_location(new String[]{"",""});
+						manuscript_dialog = false;
+					}
 				}
 			}
 		}
@@ -309,8 +316,32 @@ public class KourendLibraryPlugin extends Plugin
 					library.setCustomer(-1, null);
 					panel.update();
 				}
+			}else if (isBiblia(npcHead.getModelId())){
+				Widget textw = client.getWidget(WidgetInfo.DIALOG_NPC_TEXT);
+				String text = textw.getText();
+				String[] words = text.split(" ");
+				if (manuscript_dialog){
+					System.out.println("Floor: " + words[2]);
+					System.out.println("Location: " + words[4]);
+					library.getDark_manuscript_location()[0] = words[2].toLowerCase();
+					library.getDark_manuscript_location()[1] = words[4].toLowerCase();
+					manuscript_dialog = false;
+					panel.update();
+				}
+
 			}
 		}
+		Widget playerHead = client.getWidget(WidgetInfo.DIALOG_PLAYER);
+		if (playerHead != null){
+			Widget textw = client.getWidget(WidgetInfo.DIALOG_PLAYER_TEXT);
+			String text = textw.getText();
+			if (text.toLowerCase().contains("dark manuscripts")){
+				manuscript_dialog = true;
+			}else if (text.toLowerCase().contains("looking for a book")){
+				manuscript_dialog = false;
+			}
+		}
+
 	}
 
 	@Subscribe
@@ -365,4 +396,10 @@ public class KourendLibraryPlugin extends Plugin
 	{
 		return npcId == NpcID.VILLIA || npcId == NpcID.PROFESSOR_GRACKLEBONE || npcId == NpcID.SAM_7049;
 	}
+
+	static boolean isBiblia(int npcId){
+		return npcId == NpcID.BIBLIA;
+	}
+
+
 }
