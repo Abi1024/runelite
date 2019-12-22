@@ -236,8 +236,8 @@ class KourendLibraryPanel extends PluginPanel
 	}
 
 	private boolean matching_manuscript(String location){
-		System.out.println("Bookcase location: " + location);
-		System.out.println("Target manuscript: " + library.getDark_manuscript_location()[0] + " " + library.getDark_manuscript_location()[1]); ;
+		//System.out.println("Bookcase location: " + location);
+		//System.out.println("Target manuscript: " + library.getDark_manuscript_location()[0] + " " + library.getDark_manuscript_location()[1]); ;
 		boolean flag = false;
 		if ( location.toLowerCase().contains("northwest") &&
 			library.getDark_manuscript_location()[1].contains("north-west"))
@@ -260,7 +260,7 @@ class KourendLibraryPanel extends PluginPanel
 		{
 			flag = true;
 		}
-		System.out.println("First Flag " + flag);
+		//System.out.println("First Flag " + flag);
 		if ( location.toLowerCase().contains("ground") &&
 			library.getDark_manuscript_location()[0].equals("bottom"))
 		{
@@ -276,7 +276,7 @@ class KourendLibraryPanel extends PluginPanel
 		}else{
 			flag = false;
 		}
-		System.out.println("Flag " + flag);
+		//System.out.println("Flag " + flag);
 		return flag;
 	}
 }
