@@ -27,7 +27,9 @@ package net.runelite.client.plugins.implings;
 import com.google.inject.Provides;
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -51,6 +53,14 @@ import net.runelite.client.ui.overlay.OverlayManager;
 )
 public class ImplingsPlugin extends Plugin
 {
+	private static final int DYNAMIC_SPAWN_NATURE_DRAGON = 9390;
+	private static final int DYNAMIC_SPAWN_ECLECTIC = 9391;
+	private static final int DYNAMIC_SPAWN_BABY_ESSENCE = 9392;
+
+	@Getter(AccessLevel.PACKAGE)
+	private Map<Integer, String> dynamicSpawns = new HashMap<>();
+
+
 	@Getter(AccessLevel.PACKAGE)
 	private final List<NPC> implings = new ArrayList<>();
 
@@ -78,6 +88,9 @@ public class ImplingsPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
+		dynamicSpawns.put(DYNAMIC_SPAWN_NATURE_DRAGON, "T3 Nature-Lucky Dynamic");
+		dynamicSpawns.put(DYNAMIC_SPAWN_ECLECTIC, "T2 Eclectic Dynamic");
+		dynamicSpawns.put(DYNAMIC_SPAWN_BABY_ESSENCE, "T1 Baby-Essence Dynamic");
 		overlayManager.add(overlay);
 		overlayManager.add(minimapOverlay);
 	}
@@ -110,6 +123,7 @@ public class ImplingsPlugin extends Plugin
 	@Subscribe
 	public void onNpcChanged(NpcChanged npcCompositionChanged)
 	{
+		System.out.println("NPC changed");
 		NPC npc = npcCompositionChanged.getNpc();
 		Impling impling = Impling.findImpling(npc.getId());
 

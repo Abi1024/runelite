@@ -28,8 +28,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
+import net.runelite.api.Client;
 import net.runelite.api.NPC;
+import net.runelite.api.NPCComposition;
 import net.runelite.api.Point;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -38,14 +41,16 @@ import net.runelite.client.ui.overlay.OverlayUtil;
 
 public class ImplingMinimapOverlay extends Overlay
 {
+	private final Client client;
 	private final ImplingsPlugin plugin;
 	private final ImplingsConfig config;
 
 	@Inject
-	private ImplingMinimapOverlay(ImplingsPlugin plugin, ImplingsConfig config)
+	private ImplingMinimapOverlay(Client client, ImplingsPlugin plugin, ImplingsConfig config)
 	{
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
+		this.client = client;
 		this.plugin = plugin;
 		this.config = config;
 	}
@@ -53,7 +58,15 @@ public class ImplingMinimapOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
+		Map<Integer, String> dynamicSpawns = plugin.getDynamicSpawns();
+		for (Map.Entry<Integer, String> dynamicSpawn : dynamicSpawns.entrySet())
+		{
+			drawDynamicSpawn(graphics, dynamicSpawn.getKey(), dynamicSpawn.getValue(), config.getDynamicSpawnColor());
+
+		}
+
 		List<NPC> imps = plugin.getImplings();
+
 		if (imps.isEmpty())
 		{
 			return null;
@@ -78,5 +91,29 @@ public class ImplingMinimapOverlay extends Overlay
 		}
 
 		return null;
+	}
+
+	private void drawDynamicSpawn(Graphics2D graphics, Integer spawnID, String text, Color color)
+	{
+		List<NPC> npcs = client.getNpcs();
+		for (NPC npc : npcs)
+		{
+			Point impLocation = npc.getMinimapLocation();
+			if (npc.getComposition().getId() != spawnID)
+			{
+				continue;
+			}
+			NPCComposition composition = npc.getComposition();
+			if (composition.getConfigs() != null)
+			{
+				NPCComposition transformedComposition = composition.transform();
+				if (transformedComposition == null)
+				{
+					Point textLocation = new Point(impLocation.getX() + 1, impLocation.getY());
+					OverlayUtil.renderTextLocation(graphics, textLocation, text, color);
+				}
+			}
+
+		}
 	}
 }
