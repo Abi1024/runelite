@@ -111,6 +111,7 @@ public class ImplingMinimapOverlay extends Overlay
 				{
 					Point textLocation = new Point(impLocation.getX() + 1, impLocation.getY());
 					OverlayUtil.renderTextLocation(graphics, textLocation, text, color);
+					OverlayUtil.renderMinimapLocation(graphics, impLocation, color);
 				}
 			}
 
