@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2018, Adam <Adam@sigterm.info>
- * Copyright (c) 2019, TheStonedTurtle <https://github.com/TheStonedTurtle>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,57 +25,36 @@
 package net.runelite.client.game;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import java.io.InputStream;
+import com.google.gson.stream.JsonReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.http.api.npc.NpcInfo;
+import net.runelite.http.api.npc.NpcInfoClient;
+import okhttp3.OkHttpClient;
 
-@Slf4j
 @Singleton
 @Slf4j
 public class NPCManager
 {
-	private final ImmutableMap<Integer, NPCStats> statsMap;
-	private final Map<String, Integer> healthMap;
+	private final OkHttpClient okHttpClient;
+	private Map<Integer, NpcInfo> npcMap = Collections.emptyMap();
+	private ImmutableMap<Integer, NPCStats> statsMap;
 
 	@Inject
 	private NPCManager(OkHttpClient okHttpClient, ScheduledExecutorService scheduledExecutorService)
 	{
-		final Gson gson = new Gson();
-
-		final Type typeToken = new TypeToken<Map<Integer, NPCStats>>()
-		{
-		}.getType();
-
-		final Type typeToken2 = new TypeToken<Map<String, Integer>>()
-		{
-		}.getType();
-
-		final InputStream statsFile = getClass().getResourceAsStream("/npc_stats.json");
-		final Map<Integer, NPCStats> stats = gson.fromJson(new InputStreamReader(statsFile), typeToken);
-		statsMap = ImmutableMap.copyOf(stats);
-		final InputStream healthFile = getClass().getResourceAsStream("/npc_health.json");
-		healthMap = gson.fromJson(new InputStreamReader(healthFile), typeToken2);
+		this.okHttpClient = okHttpClient;
+		scheduledExecutorService.execute(this::loadNpcs);
 	}
 
-	/**
-	 * Returns the {@link NPCStats} for target NPC id
-	 *
-	 * @param npcId NPC id
-	 * @return the {@link NPCStats} or null if unknown
-	 */
-	@Nullable
-	public NPCStats getStats(final int npcId)
-	{
-		return statsMap.get(npcId);
-	}
 
 	/**
 	 * Returns health for target NPC ID
@@ -94,28 +72,6 @@ public class NPCManager
 
 		return s.getHitpoints();
 	}
-
-	@Nullable
-	public Integer getHealth(int npcId)
-	{
-		NpcInfo npcInfo = npcMap.get(npcId);
-		return npcInfo == null ? null : npcInfo.getHitpoints();
-	}
-
-	private void loadNpcs()
-	{
-		try
-		{
-			npcMap = new NpcInfoClient(okHttpClient).getNpcs();
-		}
-		catch (IOException e)
-		{
-			log.warn("error loading npc stats", e);
-		}
-	}
-
-
-
 	/**
 	 * Returns the attack speed for target NPC ID.
 	 *
@@ -134,6 +90,18 @@ public class NPCManager
 	}
 
 	/**
+	 * Returns the {@link NPCStats} for target NPC id
+	 *
+	 * @param npcId NPC id
+	 * @return the {@link NPCStats} or null if unknown
+	 */
+	@Nullable
+	public NPCStats getStats(final int npcId)
+	{
+		return statsMap.get(npcId);
+	}
+
+	/**
 	 * Returns the exp modifier for target NPC ID based on its stats.
 	 *
 	 * @param npcId NPC id
@@ -148,5 +116,37 @@ public class NPCManager
 		}
 
 		return s.calculateXpModifier();
+	}
+
+	private void loadNpcs()
+	{
+		try
+		{
+			npcMap = new NpcInfoClient(okHttpClient).getNpcs();
+		}
+		catch (IOException e)
+		{
+			log.warn("error loading npc stats", e);
+		}
+	}
+
+	private void loadStats() throws IOException
+	{
+		try (JsonReader reader = new JsonReader(new InputStreamReader(NPCManager.class.getResourceAsStream("/npc_stats.json"), StandardCharsets.UTF_8)))
+		{
+			ImmutableMap.Builder<Integer, NPCStats> builder = ImmutableMap.builderWithExpectedSize(2821);
+			reader.beginObject();
+
+			while (reader.hasNext())
+			{
+				builder.put(
+					Integer.parseInt(reader.nextName()),
+					NPCStats.NPC_STATS_TYPE_ADAPTER.read(reader)
+				);
+			}
+
+			reader.endObject();
+			statsMap = builder.build();
+		}
 	}
 }
