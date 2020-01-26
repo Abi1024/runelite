@@ -50,9 +50,10 @@ public class NPCManager
 
 	@Inject
 	private NPCManager(OkHttpClient okHttpClient, ScheduledExecutorService scheduledExecutorService)
-	{
-		this.okHttpClient = okHttpClient;
+		{
+			this.okHttpClient = okHttpClient;
 		scheduledExecutorService.execute(this::loadNpcs);
+		scheduledExecutorService.execute(this::loadStats);
 	}
 
 
@@ -130,10 +131,11 @@ public class NPCManager
 		}
 	}
 
-	private void loadStats() throws IOException
+	private void loadStats()
 	{
-		try (JsonReader reader = new JsonReader(new InputStreamReader(NPCManager.class.getResourceAsStream("/npc_stats.json"), StandardCharsets.UTF_8)))
+		try
 		{
+			JsonReader reader = new JsonReader(new InputStreamReader(NPCManager.class.getResourceAsStream("/npc_stats.json"), StandardCharsets.UTF_8));
 			ImmutableMap.Builder<Integer, NPCStats> builder = ImmutableMap.builderWithExpectedSize(2821);
 			reader.beginObject();
 
@@ -147,6 +149,10 @@ public class NPCManager
 
 			reader.endObject();
 			statsMap = builder.build();
+		}
+		catch (IOException e)
+		{
+			log.warn("error loading npc stats", e);
 		}
 	}
 }
